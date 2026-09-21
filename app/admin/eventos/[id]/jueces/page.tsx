@@ -1,0 +1,12 @@
+import Link from 'next/link';
+import {eventContext} from '../../../../../lib/scoring/read';
+import {createClient} from '../../../../../lib/supabase/server';
+import {EventShell} from '../../shell';
+import {EventNavigation} from '../../event-navigation';
+import {AssignmentForm} from './assignment-form';
+import s from '../../events.module.css';
+type AssignmentData={judges:{id:string;name:string;email:string|null}[];assignments:{judge_id:string;category_id:string;name:string;active:boolean;available:boolean}[]};
+export default async function Page({params,searchParams}:{params:Promise<{id:string}>;searchParams:Promise<{guardado?:string}>}){
+ const {id}=await params,{event,categories}=await eventContext(id),client=await createClient();const {data,error}=await client.rpc('roboscore_event_judges',{p_event:id});const result=data as AssignmentData|null;
+ return <EventShell><header className={s.title}><p>{event.name}</p><h1>Jueces asignados.</h1><span>Cada juez podrá calificar únicamente los equipos de sus categorías asignadas.</span></header><EventNavigation eventId={id} current="judges"/>{(await searchParams).guardado==='1'&&<p className={s.success} role="status">Asignaciones actualizadas.</p>}{error||!result?<p className={s.error} role="alert">No pudimos cargar los jueces. Comprueba la conexión y que esté instalado el SQL de calificación de jueces.</p>:<><section className={s.card}><h2>Asignar una categoría</h2><p className={s.muted}>Puedes asignar varios jueces. Comparten un resultado oficial por equipo y reto; las correcciones quedan registradas. Retirar una asignación bloquea nuevas calificaciones sin borrar las anteriores.</p>{!result.judges.length&&<p className={s.muted}>Primero <Link href="/admin/jueces">invita o activa un juez</Link>.</p>}{!categories.length&&<p className={s.muted}>Primero <Link href={`/admin/eventos/${id}/categorias`}>crea una categoría</Link>.</p>}<AssignmentForm eventId={id} judges={result.judges} categories={categories}/></section><div className={s.list}>{result.assignments.map(a=><article className={s.event} key={`${a.judge_id}-${a.category_id}`}><div><h2>{a.name||'Juez'}</h2><p>{categories.find(c=>c.id===a.category_id)?.name??'Categoría'} · {a.available?'Acceso habilitado':'Cuenta desactivada o sin rol de juez'}</p></div><AssignmentForm eventId={id} judges={[]} categories={[]} remove={a}/></article>)}</div>{!result.assignments.length&&<p className={s.muted}>No hay jueces asignados a este evento.</p>}</>}</EventShell>;
+}

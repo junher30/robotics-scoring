@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { Brand } from '../../components/brand';
 import type { UserProfile } from '../../../lib/auth/profile';
 import type { DashboardResult } from '../../../lib/dashboard/schema';
 import { LogoutButton } from '../../cuenta/logout-button';
@@ -15,7 +16,7 @@ export function Dashboard({ profile, result, denied }: { profile: UserProfile; r
   ];
   return <div className={styles.shell}>
     <aside className={styles.sidebar} aria-label="Navegación administrativa">
-      <Link href="/" className={styles.brand}><span>R</span>RoboScore<span className={styles.dot}>.</span></Link>
+      <Link href="/" className={styles.brand}><Brand/></Link>
       <p className={styles.navLabel}>TU ESPACIO</p>
       <nav><Link href="/admin" aria-current="page" className={styles.selected}>▦ <span>Resumen</span></Link><Link href="/admin/eventos">◈ <span>Eventos</span></Link><Link href="/admin/jueces">◇ <span>Jueces</span></Link>{profile.role==='SUPER_ADMIN'&&<Link href="/admin/usuarios">◎ <span>Usuarios</span></Link>}<Link href="/cuenta">◎ <span>Mi cuenta</span></Link><Link href="/">↗ <span>Ver sitio público</span></Link></nav>
       <div className={styles.sidebarNote}><span className={styles.spark}>✦</span><strong>Grandes ideas.<br/>Grandes competencias.</strong><p>Todo empieza con un equipo.</p></div>

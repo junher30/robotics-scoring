@@ -1,3 +1,4 @@
+import { Brand } from '../components/brand';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
@@ -13,7 +14,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
   if (destination) redirect(destination);
   const params = await searchParams;
   return <main className={styles.screen}><div className={styles.shell}>
-    <aside className={styles.story}><Link href="/" className={styles.brand}><span>R</span>RoboScore.</Link><div><p className={styles.eyebrow}>EL TALENTO NECESITA UN BUEN EQUIPO</p><h1>Detrás de cada<br/>gran reto,<br/><em>estás tú.</em></h1><p className={styles.storyText}>Tu espacio para acompañar a quienes construyen el futuro.</p></div><div className={styles.storyFooter}><span>01 / ACCESO</span><span>Crear. Aprender. Competir.</span></div></aside>
+    <aside className={styles.story}><Link href="/" className={styles.brand}><Brand/></Link><div><p className={styles.eyebrow}>EL TALENTO NECESITA UN BUEN EQUIPO</p><h1>Detrás de cada<br/>gran reto,<br/><em>estás tú.</em></h1><p className={styles.storyText}>Tu espacio para acompañar a quienes construyen el futuro.</p></div><div className={styles.storyFooter}><span>01 / ACCESO</span><span>Crear. Aprender. Competir.</span></div></aside>
     <section className={styles.content} aria-labelledby="login-title"><Link href="/" className={styles.back}>← Volver a RoboScore</Link><div className={styles.card}><span className={styles.kicker}>BIENVENIDO A ROBOSCORE</span><h2 id="login-title">Qué bueno verte.</h2><p className={styles.description}>Ingresa con la cuenta que te asignó tu organizador.</p>
       {params.salida === '1' && <p role="status" className={styles.success}>Cerraste sesión en este dispositivo.</p>}
       {params.aviso === 'acceso' && <p role="alert" className={styles.error}>Inicia sesión con una cuenta activa para continuar.</p>}

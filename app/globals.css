@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto !important; } }
+
 @layer base {
   * { box-sizing: border-box; }
   html { scroll-behavior: smooth; scroll-padding-top: 104px; }

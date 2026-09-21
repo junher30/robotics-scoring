@@ -7,8 +7,8 @@ Cada persona entra a RoboScore por invitación, nunca por auto-registro. Un SUPE
 1. El organizador completa el formulario en `/admin/usuarios/nuevo` (o `/admin/jueces/nuevo`, `/admin/administradores?rol=ADMIN`): nombre, apellido, correo, teléfono opcional y rol.
 2. El servidor reserva la invitación con `roboscore_prepare_user_invitation` (nombre, apellido, teléfono y rol quedan fijados ahí, no en el navegador) y llama a Supabase Auth Admin (`inviteUserByEmail`) con esa reserva como referencia.
 3. La persona recibe el correo de Supabase con el enlace de `/auth/invitacion?token_hash=...` y pulsa **Aceptar invitación**.
-4. Al aceptar, `auth.verifyOtp({type:'invite'})` confirma el enlace y crea la cuenta en Supabase Auth. El disparador `roboscore_auth_user_created` (fase 4, con la función reemplazada en esta fase) busca la reserva por correo e id de invitación y crea el perfil en `public.profiles` con el nombre, rol y responsable ya decididos por el organizador — nunca con datos que la persona invitada pueda escribir.
-5. La persona elige su propia contraseña en `/cuenta/crear-clave` (`auth.updateUser({password})`). RoboScore nunca ve ni guarda esa contraseña: la gestiona Supabase Auth. Lo único que RoboScore guarda es el perfil (nombre, correo, teléfono, rol, responsable) y su estado de acceso (activo o desactivado).
+4. `inviteUserByEmail` crea la cuenta antes de aceptar el correo. En ese momento el disparador `roboscore_auth_user_created` busca la reserva por correo e id de invitación y crea el perfil con el nombre, rol y responsable autorizados. Al aceptar, `auth.verifyOtp({type:'invite'})` verifica el enlace y establece la sesión.
+5. La persona elige su contraseña en `/cuenta/crear-clave`. La acción del servidor recibe la contraseña y la transmite a Supabase Auth mediante `auth.updateUser({password})`; no la guarda en tablas de RoboScore ni la registra en logs. RoboScore conserva el perfil y su estado de acceso.
 6. Desde ahí entra a su área según su rol.
 
 `/admin/usuarios`, `/admin/administradores` y `/admin/jueces` listan las cuentas con filtro por rol/estado y paginación de 20. La ficha de cada cuenta (`/admin/usuarios/[id]`) permite editar nombre, teléfono, rol y estado con control de concurrencia (versión por `updated_at`); el correo no se cambia desde ahí. Desactivar una cuenta bloquea su acceso sin borrar su historial. Un ADMIN no puede editarse a sí mismo ni tocar a un SUPER_ADMIN; solo el SUPER_ADMIN asigna el rol ADMIN.
@@ -25,7 +25,9 @@ Añade ambas a `.env.local` (o a las variables de entorno del despliegue) y rein
 3. **Supabase Dashboard → Authentication → URL Configuration**: agrega `http://localhost:3000/auth/invitacion` (y la URL de producción cuando exista) a "Redirect URLs". Sin esto Supabase puede rechazar el `redirectTo` que envía `inviteUserByEmail`.
 4. **Supabase Dashboard → Authentication → Emails → Invite user**: reemplaza la plantilla por el contenido de `supabase/email-templates/invite-user.html` del proyecto. La plantilla por defecto de Supabase usa `{{ .ConfirmationURL }}`, que no coincide con el flujo de esta app (verificación por `token_hash` en `/auth/invitacion`); hay que usar `{{ .RedirectTo }}?token_hash={{ .TokenHash }}` como en ese archivo.
 
-Con esos cuatro puntos resueltos, enviar una invitación desde `/admin/usuarios/nuevo` queda operativo de extremo a extremo.
+5. Configura un proveedor SMTP para invitar a correos externos al equipo del proyecto. El remitente de prueba de Supabase tiene restricciones de destinatarios; consulta la [documentación oficial de SMTP](https://supabase.com/docs/guides/auth/auth-smtp).
+
+Después de configurar estos puntos, prueba una invitación real de extremo a extremo. La entrega del correo y la configuración del proyecto aún deben verificarse en Supabase.
 
 ## Activar el SQL en Supabase
 
@@ -38,7 +40,7 @@ Repetible: no reenvía correos, no cambia cuentas existentes y no desactiva RLS.
 ## Seguridad, explicada antes de usarla
 
 - El rol y el estado de una cuenta nueva **nunca** salen de `user_metadata` (que la persona invitada podría alterar): salen únicamente de la reserva en `roboscore_private.user_invitations`, creada por un ADMIN/SUPER_ADMIN activo antes de llamar a Auth, y verificada de nuevo (correo + id de invitación) cuando Auth crea la cuenta.
-- `roboscore_prepare_user_invitation` normaliza el correo, bloquea invitaciones simultáneas al mismo correo, exige 60 segundos entre reintentos y un máximo de 20 invitaciones por hora por organizador, y evita que un ADMIN invite a otro ADMIN o SUPER_ADMIN.
+- `roboscore_prepare_user_invitation` normaliza el correo, bloquea invitaciones simultáneas, exige 60 segundos entre reintentos y limita las reservas para nuevos destinatarios a 20 por hora por organizador. No es un límite global de 20 envíos contando reintentos. Evita que un ADMIN invite a otro ADMIN o SUPER_ADMIN.
 - `roboscore_private.user_invitations` tiene RLS activo y **revoke total**: ni `anon` ni `authenticated` pueden leerla directamente; solo las funciones `SECURITY DEFINER` con `search_path` fijo la consultan.
 - `profiles` sigue sin INSERT/UPDATE/DELETE directo desde el cliente; todo pasa por `roboscore_prepare_user_invitation`, el disparador de creación y `roboscore_update_managed_user`.
 - Un ADMIN solo lee/edita a los jueces con `managed_by = su id`; la política `profiles_read_managed_judges` lo aplica en la base de datos, no solo en la interfaz.
@@ -79,12 +81,20 @@ node tests/user-permissions.mjs
 
 ## Errores y qué hacer
 
+### Invitación aceptada pero no aparece “Crea tu contraseña”
+
+La aplicación admite el enlace de la plantilla personalizada (`token_hash`) y el enlace estándar de Supabase, que devuelve una sesión en el fragmento de la URL. En este segundo caso aparece **Completa tu acceso → Continuar y crear mi contraseña**, incluso si Supabase redirige al inicio. La sesión se comprueba con Auth y se exige un perfil activo antes de abrir el formulario. Los tokens se retiran de la barra de direcciones y no se guardan en almacenamiento local ni logs.
+
+Abre el correo de invitación nuevamente con la aplicación actualizada. Si ya hay una sesión válida de ese juez en el mismo navegador, abre `/cuenta/crear-clave`. Si el enlace expiró, un enlace ya consumido no puede recuperarse mediante esta corrección. No compartas el enlace completo ni la contraseña al pedir ayuda: basta el mensaje visible.
+
+Referencia del formato estándar: [Supabase, flujo implícito](https://supabase.com/docs/guides/auth/sessions/implicit-flow).
+
 - **"Falta configurar el servicio de invitaciones en el servidor"**: faltan `SUPABASE_SECRET_KEY` o `ROBOSCORE_SITE_URL` en el entorno del servidor.
 - **El correo no llega**: revisa la plantilla "Invite user" en el panel y que el correo no esté ya registrado.
-- **"El enlace venció o ya fue utilizado"**: la invitación expira a los 15 minutos o ya se usó; pide una nueva desde el listado.
+- **"El enlace venció o ya fue utilizado"**: el token expiró según la configuración de Supabase Auth o ya se usó; pide una nueva invitación. Los 15 minutos de la reserva interna solo sirven para autorizar la creación de la cuenta, no determinan la vigencia del enlace enviado.
 - **"La cuenta no está habilitada"**: el perfil no quedó activo (revisa que la reserva siga vigente y que quien invitó siga activo).
 - **"La cuenta cambió en otra sesión"**: recarga la ficha antes de reintentar el guardado.
 
 ## Evidencia
 
-Pendiente de ejecutar contra el proyecto Supabase real: aplicar el SQL, configurar las dos variables de entorno y los dos ajustes del panel, y enviar una invitación real de extremo a extremo. Las pruebas automatizadas (`tests/user-permissions.mjs` sobre PostgreSQL en memoria, sin conexión a Supabase ni envío de correos) verifican la reserva de invitaciones, el disparador de creación de perfiles y la edición de cuentas gestionadas.
+Pendiente de ejecutar contra el proyecto Supabase real: aplicar el SQL si aún no se ha hecho, configurar las variables de entorno, URLs, plantilla y SMTP, y probar una invitación real. Las pruebas automatizadas usan PostgreSQL en memoria, sin conexión a Supabase ni envío de correos, y verifican la reserva, la creación de perfiles y la edición de cuentas gestionadas.

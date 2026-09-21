@@ -10,7 +10,7 @@ export const inviteSchema = userFields.extend({ email: z.string().trim().toLower
 export const editUserSchema = userFields.extend({ active: z.enum(['true','false']) });
 export type UserValues = { first_name: string; last_name: string; email: string; phone: string; role: string; active: string };
 export type UserState = { message?: string; success?: boolean; errors?: Partial<Record<keyof UserValues,string[]>>; values?: UserValues };
-export type ManagedUser = { id: string; first_name: string; last_name: string; email: string | null; phone: string | null; role: keyof typeof roleLabels; active: boolean; managed_by: string | null; created_at: string; updated_at: string };
+export type ManagedUser = { id: string; first_name: string; last_name: string; email: string | null; phone: string | null; role: keyof typeof roleLabels; active: boolean; managed_by: string | null; created_at: string; updated_at: string; deleted_at:string|null };
 export const blankUser: UserValues = { first_name:'',last_name:'',email:'',phone:'',role:'JUDGE',active:'true' };
 export function userValues(user: ManagedUser): UserValues {
   return { first_name:user.first_name,last_name:user.last_name,email:user.email ?? '',phone:user.phone ?? '',role:user.role,active:String(user.active) };

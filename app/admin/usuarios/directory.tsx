@@ -5,7 +5,7 @@ import { roleLabels,type ManagedUser } from '../../../lib/users/schema';
 import { UserShell } from './shell';
 import s from '../eventos/events.module.css';
 import styles from './users.module.css';
-export type DirectoryQuery = {rol?:string;estado?:string;pagina?:string};
+export type DirectoryQuery = {rol?:string;estado?:string;pagina?:string;resultado?:string};
 export async function UserDirectory({kind,query}:{kind:'all'|'judges'|'admins';query:DirectoryQuery}) {
   const actor = await requireUserManager(kind !== 'judges');
   const superAdmin = actor.role === 'SUPER_ADMIN';
@@ -17,7 +17,7 @@ export async function UserDirectory({kind,query}:{kind:'all'|'judges'|'admins';q
   let rows:ManagedUser[]=[],count=0,failed=false;
   try {
     const client = await createClient();
-    let request = client.from('profiles').select(userColumns,{count:'exact'}).order('created_at',{ascending:false}).order('id').range((page-1)*20,page*20-1);
+    let request = client.from('profiles').select(userColumns,{count:'exact'}).is('deleted_at',null).order('created_at',{ascending:false}).order('id').range((page-1)*20,page*20-1);
     if (role) request=request.eq('role',role);
     if (active) request=request.eq('active',active==='true');
     if (!superAdmin) request=request.eq('managed_by',actor.id);
@@ -27,6 +27,7 @@ export async function UserDirectory({kind,query}:{kind:'all'|'judges'|'admins';q
   const pageUrl=(value:number)=>`${base}?${new URLSearchParams({...(role ? {rol:role}:{}),...(active ? {estado:active}:{}),pagina:String(value)})}`;
   const inviteUrl=kind==='judges' ? '/admin/jueces/nuevo' : `/admin/usuarios/nuevo${kind==='admins' ? '?rol=ADMIN':''}`;
   return <UserShell superAdmin={superAdmin}>
+    {query.resultado==='eliminado'&&<p className={s.success} role="status">Juez eliminado del listado. Su acceso quedó bloqueado y su historial se conserva.</p>}
     <div className={s.titleRow}><header className={s.title}><p>LAS PERSONAS DETRÁS DE CADA RETO</p><h1>{title}<span aria-hidden="true">.</span></h1><span>{kind==='judges' ? 'Prepara el equipo que acompañará y evaluará la competencia.' : 'Organiza los accesos y acompaña a tu equipo de trabajo.'}</span></header><Link href={inviteUrl} className={s.primary}>+ {kind==='judges'?'Invitar juez':kind==='admins'?'Invitar administrador':'Invitar usuario'}</Link></div>
     {superAdmin && <nav className={styles.directoryTabs} aria-label="Tipos de usuario"><Link href="/admin/usuarios" aria-current={kind==='all'?'page':undefined}>Todos los usuarios</Link><Link href="/admin/administradores" aria-current={kind==='admins'?'page':undefined}>Administradores</Link><Link href="/admin/jueces" aria-current={kind==='judges'?'page':undefined}>Jueces</Link></nav>}
     <form method="get" className={s.filters}>{kind==='all' && <><label htmlFor="rol">Rol</label><select id="rol" name="rol" defaultValue={role??''}><option value="">Todos</option>{Object.entries(roleLabels).map(([key,label])=><option key={key} value={key}>{label}</option>)}</select></>}<label htmlFor="estado">Estado</label><select id="estado" name="estado" defaultValue={active??''}><option value="">Todos</option><option value="true">Activos</option><option value="false">Desactivados</option></select><button className={s.secondary}>Filtrar</button><Link href={base} className={s.textLink}>Limpiar</Link></form>

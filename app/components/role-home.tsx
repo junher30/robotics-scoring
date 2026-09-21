@@ -1,3 +1,4 @@
+import { Brand } from './brand';
 import Link from 'next/link';
 import type { UserProfile } from '../../lib/auth/profile';
 import { LogoutButton } from '../cuenta/logout-button';
@@ -6,7 +7,7 @@ export function RoleHome({ profile, denied }: { profile: UserProfile; denied: bo
   const judge = profile.role === 'JUDGE';
   const role = { SUPER_ADMIN: 'Superadministrador', ADMIN: 'Administrador', JUDGE: 'Juez' }[profile.role];
   return <main className={styles.accountScreen}><section className={styles.accountCard}>
-    <Link href="/" className={styles.brand}><span>R</span>RoboScore.</Link>
+    <Link href="/" className={styles.brand}><Brand/></Link>
     {denied && <p role="alert" className={styles.error}>Tu cuenta no tiene acceso al área solicitada. Estás en tu espacio autorizado.</p>}
     <p className={styles.success}>Acceso verificado · {role}</p>
     <h1>{judge ? 'Espacio de jueces' : 'Espacio de administración'}</h1>
