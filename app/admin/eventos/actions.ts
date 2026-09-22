@@ -7,7 +7,7 @@ import { createClient } from '../../../lib/supabase/server';
 import { eventSchema, emptyValues, toPayload, type EventState, type EventValues } from '../../../lib/events/schema';
 export async function saveEvent(id:string, version:string|null, _previous:EventState, form:FormData):Promise<EventState> {
   const profile=await requireAccess('admin');
-  const values=Object.fromEntries(Object.keys(emptyValues).map(key=>[key,key==='public'?form.get(key)==='on':String(form.get(key)??'')])) as EventValues;
+  const values=Object.fromEntries(Object.keys(emptyValues).map(key=>[key,key==='public'||key==='shared_with_admins'?form.get(key)==='on':String(form.get(key)??'')])) as EventValues;
   const parsed=eventSchema.safeParse(values);
   if(!parsed.success)return {values,errors:parsed.error.flatten().fieldErrors,message:'Revisa los campos indicados.'};
   if(!z.string().uuid().safeParse(id).success || (version!==null&&!z.string().datetime({offset:true}).safeParse(version).success)) return {values,message:'La referencia del evento no es válida. Abre el formulario de nuevo.'};

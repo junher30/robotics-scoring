@@ -14,7 +14,7 @@ export const eventSchema = z.object({
   start_date:localDate, end_date:localDate,
   location:text(200), city:text(150), address:text(300), organizer_name:text(200),
   max_teams:z.string().trim().refine(v=>v==='' || (/^[1-9]\d*$/.test(v) && Number(v)<=2147483647),'Escribe un número entero positivo (máximo 2147483647).'),
-  status:z.enum(statuses), public:z.boolean(), logo_url:url, rules_url:url,
+  status:z.enum(statuses), public:z.boolean(), shared_with_admins:z.boolean(), logo_url:url, rules_url:url,
 }).superRefine((v,c)=>{
   const issue=(path:string,message:string)=>c.addIssue({code:'custom',path:[path],message});
   if(v.end_date<v.start_date) issue('end_date','La fecha final no puede ser anterior a la inicial.');
@@ -23,8 +23,8 @@ export type EventValues = z.infer<typeof eventSchema>;
 export type EventState = {message?:string; errors?:Partial<Record<keyof EventValues,string[]>>; values?:EventValues};
 type NullableField = 'description'|'location'|'city'|'address'|'organizer_name'|'logo_url'|'rules_url';
 export type EventRecord = Omit<EventValues,'max_teams'|'status'|NullableField> & {[K in NullableField]:string|null} & {status:EventValues['status']|'REGISTRATION';id:string;slug:string;created_by:string;updated_at:string;max_teams:number|null};
-export const emptyValues: EventValues = {name:'',description:'',start_date:'',end_date:'',location:'',city:'',address:'',organizer_name:'',max_teams:'',status:'DRAFT',public:false,logo_url:'',rules_url:''};
+export const emptyValues: EventValues = {name:'',description:'',start_date:'',end_date:'',location:'',city:'',address:'',organizer_name:'',max_teams:'',status:'DRAFT',public:false,shared_with_admins:false,logo_url:'',rules_url:''};
 export function toLocalDate(value:string|null|undefined) { return value ? new Date(new Date(value).getTime()-5*60*60*1000).toISOString().slice(0,16) : ''; }
 // Desactiva las fechas antiguas al guardar para que no restrinjan la duración del evento.
 export function toPayload(v:EventValues) {return {...v, start_date:new Date(v.start_date+':00-05:00').toISOString(), end_date:new Date(v.end_date+':00-05:00').toISOString(),registration_start:null,registration_end:null,max_teams:v.max_teams?Number(v.max_teams):null};}
-export function recordValues(event:EventRecord):EventValues {const values={...emptyValues}; for(const key of Object.keys(values) as (keyof EventValues)[]) { if(key==='public') values.public=event.public; else if(key==='status') values.status=event.status==='REGISTRATION'?'DRAFT':event.status; else if(key==='max_teams') values.max_teams=event.max_teams?.toString()??''; else if(['start_date','end_date'].includes(key)) values[key]=toLocalDate(event[key]); else values[key]=event[key]??''; } return values;}
+export function recordValues(event:EventRecord):EventValues {const values={...emptyValues}; for(const key of Object.keys(values) as (keyof EventValues)[]) { if(key==='public') values.public=event.public; else if(key==='shared_with_admins') values.shared_with_admins=event.shared_with_admins; else if(key==='status') values.status=event.status==='REGISTRATION'?'DRAFT':event.status; else if(key==='max_teams') values.max_teams=event.max_teams?.toString()??''; else if(['start_date','end_date'].includes(key)) values[key]=toLocalDate(event[key]); else values[key]=event[key]??''; } return values;}

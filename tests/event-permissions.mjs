@@ -7,6 +7,7 @@ await db.exec(`CREATE ROLE anon; CREATE ROLE authenticated; CREATE SCHEMA auth; 
 await db.exec(await fs.readFile(root+'tests/fixtures/foundation.sql','utf8'));
 await db.exec(await fs.readFile(root+'supabase/migrations/202609160001_profiles_roles.sql','utf8'));
 const migration=await fs.readFile(root+'supabase/migrations/202609200002_event_management.sql','utf8');await db.exec(migration);await db.exec(migration);
+await db.exec(await fs.readFile(root+'supabase/migrations/202609220004_share_events_with_admins.sql','utf8'));
 const ids=Array.from({length:5},(_,i)=>`00000000-0000-4000-8000-00000000000${i+1}`);
 for(let i=0;i<5;i++){await db.query('INSERT INTO auth.users VALUES ($1,$2,$3)',[ids[i],'user'+i+'@example.test',{}]);await db.query('UPDATE profiles SET role=$1,active=$2 WHERE id=$3',[i===0?'SUPER_ADMIN':i===3?'JUDGE':'ADMIN',i!==4,ids[i]]);}
 async function as(id,role='authenticated'){await db.exec('RESET ROLE');await db.query("SELECT set_config('request.jwt.claim.sub',$1,false)",[id]);await db.exec('SET ROLE '+role);}
@@ -25,6 +26,10 @@ await db.query("UPDATE events SET name='Cambio' WHERE id=$1",[a.id]);assert.equa
 await db.query("UPDATE events SET status='CANCELLED' WHERE id=$1",[a.id]);assert.equal((await db.query('SELECT status FROM events WHERE id=$1',[a.id])).rows[0].status,'CANCELLED');await db.query("UPDATE events SET status='DRAFT' WHERE id=$1",[a.id]);pass('Cancellation preserves record and is reversible');
 for(const i of [3,4]){await as(ids[i]);assert.equal((await db.query('SELECT id FROM events')).rows.length,0);await assert.rejects(insert(ids[i],'denied-'+i),{code:'42501'});assert.equal((await db.query("UPDATE events SET name='Denied' RETURNING id")).rows.length,0);pass('Judge/inactive cannot read or write '+i);}
 await as('', 'anon');await assert.rejects(db.query('SELECT * FROM events'),{code:'42501'});pass('Anonymous cannot read even public events');
+await as(ids[2]);await db.query('UPDATE events SET shared_with_admins=true WHERE id=$1',[b.id]);pass('Owner shares an event with other admins');
+await as(ids[1]);assert.equal((await db.query('SELECT id FROM events')).rows.length,2);assert.equal((await db.query("UPDATE events SET city='Compartida' WHERE id=$1 RETURNING id",[b.id])).rows.length,1);pass('Shared event is visible and editable by a foreign admin');
+await assert.rejects(db.query('UPDATE events SET shared_with_admins=false WHERE id=$1',[b.id]),{code:'42501'});pass('A foreign admin cannot revoke sharing themselves');
+await as(ids[2]);await db.query('UPDATE events SET shared_with_admins=false WHERE id=$1',[b.id]);await as(ids[1]);assert.equal((await db.query('SELECT id FROM events WHERE id=$1',[b.id])).rows.length,0);pass('Owner can revoke sharing again');
 await as(ids[0]);assert.equal((await db.query('SELECT id FROM events')).rows.length,2);assert.equal((await db.query("UPDATE events SET city='Medellín' WHERE id=$1 RETURNING id",[a.id])).rows.length,1);pass('Superadmin sees and edits all');
 await db.exec('RESET ROLE');await db.query('UPDATE profiles SET active=false WHERE id=$1',[ids[1]]);await as(ids[1]);assert.equal((await db.query('SELECT id FROM events')).rows.length,0);pass('Deactivation immediately removes access');
 await db.exec('RESET ROLE');
