@@ -3,7 +3,7 @@ const id=z.string().uuid();
 export const resultsSchema=z.object({
  events:z.array(z.object({id,name:z.string(),city:z.string().nullable(),status:z.enum(['ACTIVE','FINISHED'])})),
  categories:z.array(z.object({id,event_id:id,name:z.string(),rule:z.string().nullable(),challenge_count:z.number().int().positive().nullable()})),
- teams:z.array(z.object({id,event_id:id,category_id:id,name:z.string(),institution:z.string(),robot_name:z.string().nullable(),status:z.enum(['PENDING','APPROVED','ACTIVE','REJECTED']),scored_count:z.number().int().nonnegative(),total:z.number().nullable(),position:z.number().int().positive().nullable(),last_scored_at:z.string().nullable()})),
+ teams:z.array(z.object({id,event_id:id,category_id:id,name:z.string(),institution:z.string(),robot_name:z.string().nullable(),team_number:z.number().int().positive().nullable(),status:z.enum(['PENDING','APPROVED','ACTIVE','REJECTED']),scored_count:z.number().int().nonnegative(),total:z.number().nullable(),position:z.number().int().positive().nullable(),last_scored_at:z.string().nullable()})),
 });
 export type Results=z.infer<typeof resultsSchema>;
 export type PublicTeam=Results['teams'][number];

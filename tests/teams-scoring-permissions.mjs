@@ -6,7 +6,7 @@ await db.exec(`CREATE ROLE anon;CREATE ROLE authenticated;CREATE SCHEMA auth;
 CREATE TABLE auth.users(id uuid PRIMARY KEY,email text,raw_user_meta_data jsonb);
 CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql STABLE AS $$SELECT nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;
 GRANT USAGE ON SCHEMA public,auth TO authenticated;GRANT USAGE ON SCHEMA public TO anon;`);
-for(const file of ['tests/fixtures/foundation.sql','supabase/migrations/202609160001_profiles_roles.sql','supabase/migrations/202609200002_event_management.sql','supabase/migrations/202609200003_category_management.sql','supabase/migrations/202609210001_teams_scoring.sql','supabase/migrations/202609220002_allow_adding_challenges.sql','supabase/migrations/202609220003_team_number_and_participants.sql'])await db.exec(await fs.readFile(new URL(file,root),'utf8'));
+for(const file of ['tests/fixtures/foundation.sql','supabase/migrations/202609160001_profiles_roles.sql','supabase/migrations/202609200002_event_management.sql','supabase/migrations/202609200003_category_management.sql','supabase/migrations/202609210001_teams_scoring.sql','supabase/migrations/202609220002_allow_adding_challenges.sql','supabase/migrations/202609220003_team_number_and_participants.sql','supabase/migrations/202609210002_public_results.sql','supabase/migrations/202609220006_team_number_per_category_public.sql'])await db.exec(await fs.readFile(new URL(file,root),'utf8'));
 const id=n=>`00000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
 for(let i=1;i<=5;i++){await db.query('INSERT INTO auth.users VALUES($1,$2,$3)',[id(i),`person${i}@example.test`,{}]);await db.query('UPDATE profiles SET role=$1,active=$2 WHERE id=$3',[i===1?'SUPER_ADMIN':i===4?'JUDGE':'ADMIN',i!==5,id(i)]);}
 async function asUser(n,role='authenticated'){await db.exec('RESET ROLE');await db.query("SELECT set_config('request.jwt.claim.sub',$1,false)",[n?id(n):'']);await db.exec('SET ROLE '+role);}
@@ -23,9 +23,10 @@ await assert.rejects(team(31,20,10,null,' equipo 30 '),{code:'23505'});await ass
 await team(31);await assert.rejects(team(32),{code:'22023'});await team(32,21);await assert.rejects(team(33,21),{code:'22023'});pass('Category and event capacities enforced');
 const oldTeamVersion=await version('teams',id(30));await team(30,20,10,oldTeamVersion,'Equipo actualizado');await assert.rejects(team(30,20,10,oldTeamVersion,'Overwrite'),{code:'40001'});pass('Stale team edit cannot overwrite');
 await team(30,20,10,await version('teams',id(30)),'Equipo actualizado',true,1,['Ana Pérez','Luis Gómez']);
-let numbered=(await db.query('SELECT team_number,participant_names FROM teams WHERE id=$1',[id(30)])).rows[0];assert.equal(numbered.team_number,1);assert.deepEqual(numbered.participant_names,['Ana Pérez','Luis Gómez']);pass('Team number and participant names are stored, hidden from public results');
-await team(31,20,10,await version('teams',id(31)),'Equipo 31',true,2);pass('A different team can take another number in the same event');
-await assert.rejects(team(32,21,10,await version('teams',id(32)),'Equipo 32',true,1),{code:'23505'});pass('Team numbers must be unique within the event, even across categories');
+let numbered=(await db.query('SELECT team_number,participant_names FROM teams WHERE id=$1',[id(30)])).rows[0];assert.equal(numbered.team_number,1);assert.deepEqual(numbered.participant_names,['Ana Pérez','Luis Gómez']);pass('Team number and participant names are stored');
+await assert.rejects(team(31,20,10,await version('teams',id(31)),'Equipo 31',true,1),{code:'23505'});pass('Team numbers must be unique within the same category');
+await team(31,20,10,await version('teams',id(31)),'Equipo 31',true,2);pass('A different team can take another number in the same category');
+await team(32,21,10,await version('teams',id(32)),'Equipo 32',true,1);pass('Teams in a different category can reuse the same number');
 await config();let b=await board();assert.equal(b.challenges.length,4);assert.equal(b.teams[0].total,null);assert.equal(b.teams[0].position,null);pass('Four challenges configured; missing scores are not zero');
 const challenge=b.challenges[0].id;
 await assert.rejects(save(30,challenge,1,'1.0001'),{code:'22023'});await assert.rejects(save(30,challenge,-1,5),{code:'22023'});await assert.rejects(save(30,challenge,1,-5),{code:'22023'});pass('Invalid attempt, negative time and excess precision rejected');
