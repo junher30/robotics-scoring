@@ -32,6 +32,12 @@ await assert.rejects(db.query('UPDATE events SET shared_with_admins=false WHERE 
 await as(ids[2]);await db.query('UPDATE events SET shared_with_admins=false WHERE id=$1',[b.id]);await as(ids[1]);assert.equal((await db.query('SELECT id FROM events WHERE id=$1',[b.id])).rows.length,0);pass('Owner can revoke sharing again');
 await as(ids[0]);assert.equal((await db.query('SELECT id FROM events')).rows.length,2);assert.equal((await db.query("UPDATE events SET city='Medellín' WHERE id=$1 RETURNING id",[a.id])).rows.length,1);pass('Superadmin sees and edits all');
 await db.exec('RESET ROLE');await db.query('UPDATE profiles SET active=false WHERE id=$1',[ids[1]]);await as(ids[1]);assert.equal((await db.query('SELECT id FROM events')).rows.length,0);pass('Deactivation immediately removes access');
+await db.exec('RESET ROLE');await db.exec(await fs.readFile(root+'supabase/migrations/202609220005_delete_events.sql','utf8'));
+const empty=await insert(ids[2],'evento-vacio');
+await as(ids[2]);await assert.rejects(db.query('SELECT roboscore_delete_event($1)',[empty.id]),{code:'42501'});pass('Only SUPER_ADMIN may delete events, even the event owner cannot');
+await db.exec('RESET ROLE');await db.query("INSERT INTO event_categories(event_id,name) VALUES($1,'Categoría')",[a.id]);
+await as(ids[0]);await assert.rejects(db.query('SELECT roboscore_delete_event($1)',[a.id]),{code:'22023'});pass('Superadmin cannot delete an event that already has categories');
+assert.equal((await db.query('SELECT roboscore_delete_event($1) AS id',[empty.id])).rows[0].id,empty.id);assert.equal((await db.query('SELECT id FROM events WHERE id=$1',[empty.id])).rows.length,0);pass('Superadmin can permanently delete an event with no categories yet');
 await db.exec('RESET ROLE');
 const verification=await db.query(await fs.readFile(root+'supabase/verify-phase-9.sql','utf8'));assert(verification.rows.every(r=>r.passed));pass('All verification checks true');
 console.log(checks+' PostgreSQL checks passed; migration repeatable');await db.close();
