@@ -4,7 +4,7 @@ import {z} from 'zod';
 import {categoryEvent} from '../categories/read';
 import {createClient} from '../supabase/server';
 import type {Team,CategoryOption,Board} from './schema';
-export const teamColumns='id,event_id,category_id,name,institution,robot_name,status,updated_at';
+export const teamColumns='id,event_id,category_id,name,institution,robot_name,team_number,participant_names,status,updated_at';
 export async function eventContext(id:string) {
  const event=await categoryEvent(id);
  const client=await createClient();
