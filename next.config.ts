@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  // Servir desde la raíz, como en la configuración local original.
 };
 
 export default nextConfig;
