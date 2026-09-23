@@ -1,0 +1,31 @@
+.scene{margin:0;padding:18px 0 4px;display:flex;flex-direction:column;align-items:center;gap:6px}.scene svg{display:block;width:100%;max-width:640px;height:auto;overflow:visible}.scene figcaption{font-size:10px;letter-spacing:.15em;font-weight:800;color:#a73548;text-transform:uppercase}
+.scene g,.scene path,.scene text{transform-box:view-box}
+.cheer{font:900 30px/1 system-ui,sans-serif;fill:#de0028;letter-spacing:-1px;opacity:0;transform-box:fill-box!important;transform-origin:center}
+.antenna{animation:blink 2.4s ease-in-out infinite}
+.kick .kicker{animation:walkIn 5s cubic-bezier(.3,.7,.4,1) both}
+.kick .kickLeg{animation:kickLeg 5s ease-in-out both}
+.kick .ball{animation:ballFly 5s linear both}
+.kick .spin{animation:ballSpin 5s linear both}
+.kick .net{animation:netShake 5s ease-out both;transform-box:fill-box!important;transform-origin:left bottom}
+.kick .cheer{animation:cheer 5s ease-out both}
+.fight .leftBody{animation:leftBody 6.5s ease-in-out both}
+.fight .rightBody{animation:rightBody 6.5s ease-in-out both}
+.fight .leftArm{animation:leftArm 6.5s ease-in-out both}
+.fight .rightArm{animation:rightArm 6.5s ease-in-out both}
+.fight .sparkOne,.fight .sparkTwo{opacity:0;animation:6.5s ease-out both}
+.fight .sparkOne{animation-name:sparkOne}.fight .sparkTwo{animation-name:sparkTwo}
+.fight .cheer{animation:cheer 6.5s ease-out both}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.35}}
+@keyframes walkIn{0%{transform:translate(-90px,0)}8%{transform:translate(-68px,-3px)}16%{transform:translate(-45px,0)}24%{transform:translate(-22px,-3px)}32%,100%{transform:translate(0,0)}}
+@keyframes kickLeg{0%,34%{transform:rotate(0)}44%{transform:rotate(28deg)}50%{transform:rotate(-62deg)}62%,100%{transform:rotate(0)}}
+@keyframes ballFly{0%,49%{transform:translate(0,0)}57%{transform:translate(110px,-58px)}65%{transform:translate(230px,-72px)}73%{transform:translate(340px,-38px)}78%{transform:translate(392px,0)}84%{transform:translate(380px,-6px)}90%,100%{transform:translate(386px,0)}}
+@keyframes ballSpin{0%,49%{transform:rotate(0)}78%{transform:rotate(900deg)}100%{transform:rotate(1000deg)}}
+@keyframes netShake{0%,76%{transform:skewX(0)}80%{transform:skewX(-6deg)}85%{transform:skewX(4deg)}90%{transform:skewX(-2deg)}95%,100%{transform:skewX(0)}}
+@keyframes cheer{0%,76%{opacity:0;transform:scale(.3)}82%{opacity:1;transform:scale(1.15)}88%{transform:scale(1)}94%{opacity:1}100%{opacity:0;transform:scale(1)}}
+@keyframes leftBody{0%{transform:translate(-170px,0)}18%,46%{transform:translate(0,0)}51%{transform:translate(-14px,0) rotate(-7deg)}58%,78%{transform:translate(0,0)}83%{transform:translate(0,-16px)}88%,100%{transform:translate(0,0)}}
+@keyframes rightBody{0%{transform:translate(-170px,0)}18%,26%{transform:translate(0,0)}31%{transform:translate(-14px,0) rotate(-7deg)}38%,80%{transform:translate(0,0)}85%{transform:translate(0,-16px)}90%,100%{transform:translate(0,0)}}
+@keyframes leftArm{0%,20%{transform:rotate(0)}25%{transform:rotate(-95deg)}32%,76%{transform:rotate(0)}82%,94%{transform:rotate(-165deg)}100%{transform:rotate(0)}}
+@keyframes rightArm{0%,40%{transform:rotate(0)}45%{transform:rotate(-95deg)}52%,78%{transform:rotate(0)}84%,94%{transform:rotate(-165deg)}100%{transform:rotate(0)}}
+@keyframes sparkOne{0%,23%{opacity:0;transform:scale(0)}26%{opacity:1;transform:scale(1.2)}32%,100%{opacity:0;transform:scale(.4)}}
+@keyframes sparkTwo{0%,43%{opacity:0;transform:scale(0)}46%{opacity:1;transform:scale(1.2)}52%,100%{opacity:0;transform:scale(.4)}}
+@media(prefers-reduced-motion:reduce){.scene *{animation:none!important}.kick .ball{transform:translate(386px,0)}}
