@@ -1,4 +1,4 @@
-.scene{margin:0;padding:18px 0 4px;display:flex;flex-direction:column;align-items:center;gap:6px}.scene svg{display:block;width:100%;max-width:640px;height:auto;overflow:visible}.scene figcaption{font-size:10px;letter-spacing:.15em;font-weight:800;color:#a73548;text-transform:uppercase}
+.scene{position:fixed;z-index:20;margin:0;width:min(340px,58vw);pointer-events:none;display:flex;flex-direction:column;align-items:center;gap:4px;opacity:0}.scene svg{display:block;width:100%;height:auto;overflow:visible}.sceneKick{top:112px;left:0;animation:enterLeft 6s ease-in-out both}.sceneFight{bottom:20px;right:0;animation:enterRight 7.2s ease-in-out both}@keyframes enterLeft{0%{transform:translateX(-110%);opacity:0}7%{transform:translateX(0);opacity:1}90%{transform:translateX(0);opacity:1}100%{transform:translateX(-110%);opacity:0}}@keyframes enterRight{0%{transform:translateX(110%);opacity:0}7%{transform:translateX(0);opacity:1}91%{transform:translateX(0);opacity:1}100%{transform:translateX(110%);opacity:0}}@media(max-width:650px){.scene{width:min(230px,62vw)}.sceneKick{top:96px}}.scene figcaption{font-size:10px;letter-spacing:.15em;font-weight:800;color:#a73548;text-transform:uppercase}
 .scene g,.scene path,.scene text{transform-box:view-box}
 .cheer{font:900 30px/1 system-ui,sans-serif;fill:#de0028;letter-spacing:-1px;opacity:0;transform-box:fill-box!important;transform-origin:center}
 .antenna{animation:blink 2.4s ease-in-out infinite}
@@ -28,4 +28,4 @@
 @keyframes rightArm{0%,40%{transform:rotate(0)}45%{transform:rotate(-95deg)}52%,78%{transform:rotate(0)}84%,94%{transform:rotate(-165deg)}100%{transform:rotate(0)}}
 @keyframes sparkOne{0%,23%{opacity:0;transform:scale(0)}26%{opacity:1;transform:scale(1.2)}32%,100%{opacity:0;transform:scale(.4)}}
 @keyframes sparkTwo{0%,43%{opacity:0;transform:scale(0)}46%{opacity:1;transform:scale(1.2)}52%,100%{opacity:0;transform:scale(.4)}}
-@media(prefers-reduced-motion:reduce){.scene *{animation:none!important}.kick .ball{transform:translate(386px,0)}}
+@media(prefers-reduced-motion:reduce){.scene{display:none}}

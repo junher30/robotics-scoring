@@ -2,7 +2,7 @@
 import { useEffect,useState } from 'react';
 import s from './robot-scene.module.css';
 
-// Plays once on mount (so every load/reload starts it fresh) and replays every 2.5 minutes while the tab is visible.
+// Slides in from the side on mount, vanishes when its cycle ends, and replays every 2.5 minutes while the tab is visible.
 const REPLAY_MS=150000;
 
 function Robot({tone,body,arm,leg}:{tone:'red'|'ink';body?:string;arm?:string;leg?:string}){
@@ -45,5 +45,5 @@ function Fight(){
 export default function RobotScene({variant,label}:{variant:'kick'|'fight';label:string}){
  const [run,setRun]=useState(0);
  useEffect(()=>{const timer=setInterval(()=>{if(document.visibilityState==='visible')setRun(r=>r+1);},REPLAY_MS);return()=>clearInterval(timer);},[]);
- return <figure className={s.scene} aria-hidden="true"><svg key={run} className={variant==='kick'?s.kick:s.fight} viewBox="0 0 640 142" preserveAspectRatio="xMidYMax meet">{variant==='kick'?<Kick/>:<Fight/>}</svg><figcaption>{label}</figcaption></figure>;
+ return <figure key={run} className={`${s.scene} ${variant==='kick'?s.sceneKick:s.sceneFight}`} aria-hidden="true"><svg className={variant==='kick'?s.kick:s.fight} viewBox="0 0 640 142" preserveAspectRatio="xMidYMax meet">{variant==='kick'?<Kick/>:<Fight/>}</svg><figcaption>{label}</figcaption></figure>;
 }
