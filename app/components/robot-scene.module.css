@@ -1,13 +1,23 @@
-.scene{position:fixed;z-index:20;margin:0;width:min(340px,58vw);pointer-events:none;display:flex;flex-direction:column;align-items:center;gap:4px;opacity:0}.scene svg{display:block;width:100%;height:auto;overflow:visible}.sceneKick{top:112px;left:0;animation:enterLeft 6s ease-in-out both}.sceneFight{bottom:20px;right:0;animation:enterRight 7.2s ease-in-out both}@keyframes enterLeft{0%{transform:translateX(-110%);opacity:0}7%{transform:translateX(0);opacity:1}90%{transform:translateX(0);opacity:1}100%{transform:translateX(-110%);opacity:0}}@keyframes enterRight{0%{transform:translateX(110%);opacity:0}7%{transform:translateX(0);opacity:1}91%{transform:translateX(0);opacity:1}100%{transform:translateX(110%);opacity:0}}@media(max-width:650px){.scene{width:min(230px,62vw)}.sceneKick{top:96px}}.scene figcaption{font-size:10px;letter-spacing:.15em;font-weight:800;color:#a73548;text-transform:uppercase}
-.scene g,.scene path,.scene text{transform-box:view-box}
+.stage{position:relative;margin:0 auto;width:100%;overflow:hidden;pointer-events:none}
+.stageTop{max-width:720px;aspect-ratio:640/150}
+.stageBottom{max-width:640px;aspect-ratio:640/142;margin-top:12px}
+.stage svg{position:absolute;inset:0;width:100%;height:100%;display:block}
+.stage g,.stage path,.stage text,.stage circle{transform-box:view-box}
 .cheer{font:900 30px/1 system-ui,sans-serif;fill:#de0028;letter-spacing:-1px;opacity:0;transform-box:fill-box!important;transform-origin:center}
 .antenna{animation:blink 2.4s ease-in-out infinite}
-.kick .kicker{animation:walkIn 5s cubic-bezier(.3,.7,.4,1) both}
-.kick .kickLeg{animation:kickLeg 5s ease-in-out both}
-.kick .ball{animation:ballFly 5s linear both}
-.kick .spin{animation:ballSpin 5s linear both}
-.kick .net{animation:netShake 5s ease-out both;transform-box:fill-box!important;transform-origin:left bottom}
-.kick .cheer{animation:cheer 5s ease-out both}
+.letter{font:900 64px/1 system-ui,-apple-system,'Segoe UI',Arial,sans-serif;letter-spacing:-2px;opacity:0;animation:letterDrop .55s cubic-bezier(.3,1.4,.5,1) both}
+.ink{fill:#202831}.red{fill:#de0028}
+.build .run{animation:runAcross 6s linear both}
+.build .hopper{animation:hop .6s ease-in-out 10 both}
+.build .stride{animation:stride .3s ease-in-out 20 alternate both}
+.build .swing{animation:swing .3s ease-in-out 20 alternate both}
+.confetti{opacity:0;animation:burst 1.1s ease-out 4.3s both}
+@keyframes letterDrop{0%{opacity:0;transform:translateY(-70px)}55%{opacity:1;transform:translateY(8px)}78%{transform:translateY(-5px)}100%{opacity:1;transform:translateY(0)}}
+@keyframes runAcross{from{transform:translateX(-60px)}to{transform:translateX(900px)}}
+@keyframes hop{0%,100%{transform:translateY(0)}50%{transform:translateY(-34px)}}
+@keyframes stride{from{transform:rotate(-30deg)}to{transform:rotate(30deg)}}
+@keyframes swing{from{transform:rotate(35deg)}to{transform:rotate(-35deg)}}
+@keyframes burst{0%{opacity:0;transform:translate(0,0) scale(.3)}15%{opacity:1}100%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(1)}}
 .fight .leftBody{animation:leftBody 6.5s ease-in-out both}
 .fight .rightBody{animation:rightBody 6.5s ease-in-out both}
 .fight .leftArm{animation:leftArm 6.5s ease-in-out both}
@@ -16,11 +26,6 @@
 .fight .sparkOne{animation-name:sparkOne}.fight .sparkTwo{animation-name:sparkTwo}
 .fight .cheer{animation:cheer 6.5s ease-out both}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.35}}
-@keyframes walkIn{0%{transform:translate(-90px,0)}8%{transform:translate(-68px,-3px)}16%{transform:translate(-45px,0)}24%{transform:translate(-22px,-3px)}32%,100%{transform:translate(0,0)}}
-@keyframes kickLeg{0%,34%{transform:rotate(0)}44%{transform:rotate(28deg)}50%{transform:rotate(-62deg)}62%,100%{transform:rotate(0)}}
-@keyframes ballFly{0%,49%{transform:translate(0,0)}57%{transform:translate(110px,-58px)}65%{transform:translate(230px,-72px)}73%{transform:translate(340px,-38px)}78%{transform:translate(392px,0)}84%{transform:translate(380px,-6px)}90%,100%{transform:translate(386px,0)}}
-@keyframes ballSpin{0%,49%{transform:rotate(0)}78%{transform:rotate(900deg)}100%{transform:rotate(1000deg)}}
-@keyframes netShake{0%,76%{transform:skewX(0)}80%{transform:skewX(-6deg)}85%{transform:skewX(4deg)}90%{transform:skewX(-2deg)}95%,100%{transform:skewX(0)}}
 @keyframes cheer{0%,76%{opacity:0;transform:scale(.3)}82%{opacity:1;transform:scale(1.15)}88%{transform:scale(1)}94%{opacity:1}100%{opacity:0;transform:scale(1)}}
 @keyframes leftBody{0%{transform:translate(-170px,0)}18%,46%{transform:translate(0,0)}51%{transform:translate(-14px,0) rotate(-7deg)}58%,78%{transform:translate(0,0)}83%{transform:translate(0,-16px)}88%,100%{transform:translate(0,0)}}
 @keyframes rightBody{0%{transform:translate(-170px,0)}18%,26%{transform:translate(0,0)}31%{transform:translate(-14px,0) rotate(-7deg)}38%,80%{transform:translate(0,0)}85%{transform:translate(0,-16px)}90%,100%{transform:translate(0,0)}}
@@ -28,4 +33,4 @@
 @keyframes rightArm{0%,40%{transform:rotate(0)}45%{transform:rotate(-95deg)}52%,78%{transform:rotate(0)}84%,94%{transform:rotate(-165deg)}100%{transform:rotate(0)}}
 @keyframes sparkOne{0%,23%{opacity:0;transform:scale(0)}26%{opacity:1;transform:scale(1.2)}32%,100%{opacity:0;transform:scale(.4)}}
 @keyframes sparkTwo{0%,43%{opacity:0;transform:scale(0)}46%{opacity:1;transform:scale(1.2)}52%,100%{opacity:0;transform:scale(.4)}}
-@media(prefers-reduced-motion:reduce){.scene{display:none}}
+@media(prefers-reduced-motion:reduce){.build .run,.confetti{display:none}.letter{animation:none!important;opacity:1}.stageBottom{display:none}}
