@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Brand } from './brand';
 import RobotScene from './robot-scene';
 import EasterEgg from './easter-eggs';
+import { matchesTeamQuery } from '../../lib/scoring/search';
 import { points,progress,resultsSchema,teamStatus,type PublicTeam,type ResultsResponse } from '../../lib/results/schema';
 import { BASE_PATH } from '../../lib/base-path';
 import { colombiaTime } from '../../lib/results/time';
@@ -13,9 +14,6 @@ import s from './results-home.module.css';
 const guide=[{title:'Encuentra tu equipo',text:'Elige el evento y la categoría, o busca por nombre, institución o robot. Todos tienen su lugar en el tablero.',icon:'01'}, {title:'Entiende los puntos',text:'Cada reto aporta una puntuación según el intento y el tiempo. El total suma los retos calificados. “Parcial” significa que todavía faltan retos.',icon:'02'}, {title:'Sigue la competencia',text:'Las posiciones se comparan dentro de cada categoría. Los empates comparten puesto. Consultamos cambios cada 15 segundos mientras esta página está visible.',icon:'03'}];
 // Team numbers are scoped per category, so equal numbers fall back to category order; unnumbered teams go last.
 const byNumber=(a:PublicTeam,b:PublicTeam,order:Map<string,number>)=>a.team_number===b.team_number?(order.get(a.category_id)??0)-(order.get(b.category_id)??0):a.team_number==null?1:b.team_number==null?-1:a.team_number-b.team_number;
-const normalize=(text:string)=>text.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
-// A numeric search ("7" or "#7") matches the team number, or a standalone number in the team's text; anything else matches names.
-const matchesQuery=(t:PublicTeam,raw:string)=>{const q=normalize(raw.trim()).replace(/^#/,'');if(!q)return true;const text=normalize(`${t.name} ${t.institution} ${t.robot_name??''}`);if(/^\d+$/.test(q))return t.team_number===Number(q)||new RegExp(`(^|\\D)${q}(\\D|$)`).test(text);return text.includes(q);};
 export default function ResultsHome({initial}:{initial:ResultsResponse}){
  const [result,setResult]=useState(initial),[busy,setBusy]=useState(false),[eventId,setEvent]=useState(''),[categoryId,setCategory]=useState(''),[query,setQuery]=useState(''),[page,setPage]=useState(1),[step,setStep]=useState(0);
  const request=useRef<AbortController|null>(null);
@@ -35,7 +33,7 @@ export default function ResultsHome({initial}:{initial:ResultsResponse}){
  const categoryOrder=new Map(categories.map((c,i)=>[c.id,i]));
  const selectedCategory=availableCategories.some(c=>c.id===categoryId)?categoryId:'';
  // Teams stay hidden until an event is chosen, and are always listed by team number.
- const filtered=!selectedEvent?[]:teams.filter(t=>t.event_id===selectedEvent&&(!selectedCategory||t.category_id===selectedCategory)&&matchesQuery(t,query)).sort((a,b)=>byNumber(a,b,categoryOrder));
+ const filtered=!selectedEvent?[]:teams.filter(t=>t.event_id===selectedEvent&&(!selectedCategory||t.category_id===selectedCategory)&&matchesTeamQuery(t,query)).sort((a,b)=>byNumber(a,b,categoryOrder));
  const totalPages=Math.max(1,Math.ceil(filtered.length/12)),currentPage=Math.min(page,totalPages);
  const visible=filtered.slice((currentPage-1)*12,currentPage*12);
  const comparison=selectedCategory?filtered.filter(t=>t.status==='ACTIVE'&&t.total!==null).sort((a,b)=>(b.total??0)-(a.total??0)||byNumber(a,b,categoryOrder)).slice(0,8):[];
