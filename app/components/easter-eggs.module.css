@@ -1,0 +1,14 @@
+.rain{position:fixed;inset:0;z-index:40;pointer-events:none;overflow:hidden}
+.rain span{position:absolute;line-height:1;opacity:0;animation-timing-function:linear;animation-fill-mode:both;animation-iteration-count:1;will-change:transform}
+.fall span{top:-50px;animation-name:fall}
+.rise span{bottom:-50px;animation-name:rise}
+.card{display:flex;align-items:center;gap:18px;margin-top:16px;padding:18px 22px;background:linear-gradient(135deg,#fff8e6,#fff0f2);border:2px dashed #e0a84a;border-radius:16px;animation:pop .45s cubic-bezier(.3,1.5,.5,1) both}
+.icon{font-size:40px;line-height:1;flex-shrink:0}
+.card small{display:block;font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#a0691a}
+.card strong{display:block;font-size:20px;font-weight:800;letter-spacing:-.4px;color:#202831;margin-top:2px}
+.card p{margin-top:4px;font-size:13px;line-height:1.7;color:#5b6572}
+@keyframes fall{0%{opacity:0;transform:translate(0,0) rotate(0)}8%{opacity:1}92%{opacity:1}100%{opacity:0;transform:translate(var(--sway),calc(100vh + 80px)) rotate(360deg)}}
+@keyframes rise{0%{opacity:0;transform:translate(0,0) rotate(0) scale(.6)}10%{opacity:1}90%{opacity:1}100%{opacity:0;transform:translate(var(--sway),calc(-100vh - 80px)) rotate(-25deg) scale(1.1)}}
+@keyframes pop{from{opacity:0;transform:scale(.85) translateY(8px)}to{opacity:1;transform:none}}
+@media(max-width:650px){.card{padding:16px}.icon{font-size:32px}.card strong{font-size:17px}}
+@media(prefers-reduced-motion:reduce){.rain{display:none}.card{animation:none}}
