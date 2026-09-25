@@ -8,6 +8,7 @@ export async function acceptInvitation(token:string,_previous:AcceptState):Promi
   try {
     const client=await createClient(false);
     const {data,error}=await client.auth.verifyOtp({token_hash:token,type:'invite'});
+    if (error) console.error('[invitacion] verifyOtp falló:',error.name,error.code,error.status);
     if (error||!data.user) return {message:'El enlace venció o ya fue utilizado. Si ya creaste tu contraseña, inicia sesión. Si no, pide al organizador una nueva invitación.'};
     const profile=await client.from('profiles').select('active').eq('id',data.user.id).single();
     if (profile.error||!profile.data?.active) {

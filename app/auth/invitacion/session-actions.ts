@@ -10,6 +10,7 @@ export async function acceptInvitationSession(accessToken:string,refreshToken:st
  try{
   const client=await createClient(false);
   const {data:session,error:sessionError}=await client.auth.setSession({access_token:accessToken,refresh_token:refreshToken});
+  if(sessionError)console.error('[invitacion] setSession falló:',sessionError.name,sessionError.code,sessionError.status);
   if(sessionError||!session.session){await client.auth.signOut({scope:'local'});return {message:'No pudimos recuperar la sesión de invitación. El enlace puede haber vencido.'};}
   const {data,error}=await client.auth.getUser();
   if(error||!data.user||!data.user.invited_at){await client.auth.signOut({scope:'local'});return {message:'No pudimos verificar la cuenta invitada. Contacta al organizador.'};}
