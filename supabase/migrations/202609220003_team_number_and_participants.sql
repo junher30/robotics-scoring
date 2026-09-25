@@ -1,10 +1,11 @@
--- Número de equipo (único por evento) y nombres de participantes. Ambos solo se
+-- Número de equipo (único por categoría) y nombres de participantes. Ambos solo se
 -- exponen a organizadores y jueces vía las funciones existentes; nunca aparecen en
 -- roboscore_public_results(). Repetible; requiere 202609210001_teams_scoring.sql.
 BEGIN;
 ALTER TABLE public.teams ADD COLUMN IF NOT EXISTS team_number integer CHECK (team_number IS NULL OR team_number>0);
 ALTER TABLE public.teams ADD COLUMN IF NOT EXISTS participant_names text[] NOT NULL DEFAULT '{}' CHECK (cardinality(participant_names)<=10);
-CREATE UNIQUE INDEX IF NOT EXISTS teams_number_per_event ON public.teams(event_id,team_number) WHERE team_number IS NOT NULL;
+-- El número solo debe ser único dentro de su categoría (CATA #3 y CATB #3 pueden coexistir).
+CREATE UNIQUE INDEX IF NOT EXISTS teams_number_per_category ON public.teams(category_id,team_number) WHERE team_number IS NOT NULL;
 
 DROP FUNCTION IF EXISTS public.roboscore_save_team(uuid,uuid,timestamptz,uuid,text,text,text,boolean);
 CREATE OR REPLACE FUNCTION public.roboscore_save_team(p_event uuid,p_id uuid,p_version timestamptz,p_category uuid,p_name text,p_institution text,p_robot text,p_active boolean,p_number integer,p_participants text[])
@@ -34,7 +35,7 @@ BEGIN
  ELSIF p_version IS NOT NULL THEN RAISE EXCEPTION 'Equipo no disponible.' USING ERRCODE='40001'; END IF;
  IF p_active AND c.status='CLOSED' THEN RAISE EXCEPTION 'La categoría está cerrada.' USING ERRCODE='22023'; END IF;
  IF EXISTS(SELECT 1 FROM public.teams WHERE event_id=p_event AND category_id=p_category AND id<>p_id AND lower(btrim(name))=lower(btrim(p_name))) THEN RAISE EXCEPTION 'Ya existe un equipo con ese nombre en la categoría.' USING ERRCODE='23505'; END IF;
- IF p_number IS NOT NULL AND EXISTS(SELECT 1 FROM public.teams WHERE event_id=p_event AND team_number=p_number AND id<>p_id) THEN RAISE EXCEPTION 'Ya existe un equipo con ese número en este evento.' USING ERRCODE='23505'; END IF;
+ IF p_number IS NOT NULL AND EXISTS(SELECT 1 FROM public.teams WHERE category_id=p_category AND team_number=p_number AND id<>p_id) THEN RAISE EXCEPTION 'Ya existe un equipo con ese número en esta categoría.' USING ERRCODE='23505'; END IF;
  IF p_active AND (t.id IS NULL OR t.status='REJECTED' OR t.category_id<>p_category) THEN
   IF c.max_teams IS NOT NULL AND (SELECT count(*) FROM public.teams WHERE category_id=p_category AND id<>p_id AND status<>'REJECTED')>=c.max_teams THEN RAISE EXCEPTION 'La categoría alcanzó su máximo de equipos.' USING ERRCODE='22023'; END IF;
   IF e.max_teams IS NOT NULL AND (SELECT count(*) FROM public.teams WHERE event_id=p_event AND id<>p_id AND status<>'REJECTED')>=e.max_teams THEN RAISE EXCEPTION 'El evento alcanzó su máximo de equipos.' USING ERRCODE='22023'; END IF;
