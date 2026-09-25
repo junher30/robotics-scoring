@@ -10,7 +10,10 @@ function values(form: FormData): UserValues {
   return { first_name:String(form.get('first_name') ?? ''),last_name:String(form.get('last_name') ?? ''),email:String(form.get('email') ?? ''),phone:String(form.get('phone') ?? ''),role:String(form.get('role') ?? ''),active:String(form.get('active') ?? 'true') };
 }
 function databaseMessage(error: {code?: string;message?: string}) {
-  if (['42501','22023','23505','40001','P0001'].includes(error.code ?? '')) return error.message ?? 'No se pudo completar el cambio.';
+  if (['42501','22023','23505','40001','P0001'].includes(error.code ?? '')) {
+    const message = error.message ?? 'No se pudo completar el cambio.';
+    return message.startsWith('La cuenta ya existe') ? `${message} Si esa persona todavía no creó su contraseña, dile que use «Restablecer mi contraseña» en la pantalla de inicio de sesión.` : message;
+  }
   return 'No pudimos completar la operación. Revisa la conexión y que esté aplicado el SQL de usuarios.';
 }
 function refreshUsers() { ['/admin','/admin/usuarios','/admin/jueces','/admin/administradores'].forEach(path=>revalidatePath(path)); }

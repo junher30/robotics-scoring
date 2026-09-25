@@ -5,7 +5,7 @@ import {acceptInvitationSession,type SessionState} from './session-actions';
 import s from '../../admin/eventos/events.module.css';
 import styles from './session-bridge.module.css';
 function SessionForm({link}:{link:Extract<InvitationLink,{kind:'session'}>}){
- const [state,action,pending]=useActionState<SessionState,FormData>(acceptInvitationSession.bind(null,link.accessToken,link.refreshToken),{});
+ const [state,action,pending]=useActionState<SessionState,FormData>(acceptInvitationSession.bind(null,link.accessToken,link.refreshToken,link.flow),{});
  return <form action={action} aria-busy={pending}>{state.message&&<p className={s.error} role="alert">{state.message}</p>}<button className={s.primary} disabled={pending}>{pending?'Preparando tu acceso…':'Continuar y crear mi contraseña'}</button></form>;
 }
 export function InvitationSessionBridge(){
@@ -19,5 +19,5 @@ export function InvitationSessionBridge(){
   capture();window.addEventListener('hashchange',capture);return()=>window.removeEventListener('hashchange',capture);
  },[]);
  if(!link)return null;
- return <dialog ref={dialog} className={styles.screen} aria-labelledby="invitation-session-title" onCancel={()=>setLink(null)}><section className={styles.card}><p className={s.muted}>TU INVITACIÓN A ROBOSCORE</p><h1 id="invitation-session-title">Completa tu acceso.</h1><p>Continúa para verificar tu cuenta invitada y elegir tu contraseña.</p>{link.kind==='session'?<SessionForm link={link}/>:<p className={s.error} role="alert">{link.message}</p>}<p className={s.muted}>No necesitas una contraseña anterior para completar este paso.</p><button className={s.secondary} onClick={()=>setLink(null)}>Cerrar</button></section></dialog>;
+ return <dialog ref={dialog} className={styles.screen} aria-labelledby="invitation-session-title" onCancel={()=>setLink(null)}><section className={styles.card}><p className={s.muted}>{link.flow==='recovery'?'RECUPERA TU ACCESO A ROBOSCORE':'TU INVITACIÓN A ROBOSCORE'}</p><h1 id="invitation-session-title">{link.flow==='recovery'?'Elige una nueva contraseña.':'Completa tu acceso.'}</h1><p>{link.flow==='recovery'?'Continúa para verificar tu cuenta y crear tu contraseña.':'Continúa para verificar tu cuenta invitada y elegir tu contraseña.'}</p>{link.kind==='session'?<SessionForm link={link}/>:<p className={s.error} role="alert">{link.message}</p>}<p className={s.muted}>No necesitas una contraseña anterior para completar este paso.</p><button className={s.secondary} onClick={()=>setLink(null)}>Cerrar</button></section></dialog>;
 }

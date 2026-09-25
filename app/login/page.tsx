@@ -20,7 +20,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
       {params.aviso === 'acceso' && <p role="alert" className={styles.error}>Inicia sesión con una cuenta activa para continuar.</p>}
       {connectionError && <p role="alert" className={styles.error}>No pudimos conectar con el servicio. Inténtalo de nuevo en unos momentos.</p>}
       <LoginForm/>
-      <details className={styles.help}><summary>¿Olvidaste tu contraseña o no tienes cuenta?</summary><p>Contacta al administrador de tu evento para recuperar el acceso o solicitar una cuenta. El registro público está cerrado.</p></details>
+      <details className={styles.help}><summary>¿Olvidaste tu contraseña o no tienes cuenta?</summary><p><Link href="/auth/recuperar">Restablecer mi contraseña</Link> con el correo de tu cuenta. Si no tienes cuenta, contacta al administrador de tu evento: el registro público está cerrado.</p></details>
     </div><p className={styles.footer}>RoboScore · Un lugar para construir el futuro.</p></section>
   </div></main>;
 }

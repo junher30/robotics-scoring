@@ -140,6 +140,11 @@ test('Database rejection is translated into a message',async()=>{
   const result=await f.invite(inviteForm());
   assert.equal(result.message,'El correo ya está en uso.');assert.equal(f.state.inviteCalls,0);
 });
+test('An existing account without a password is pointed to the password reset',async()=>{
+  const f=userFixture();f.state.rpc={data:null,error:{code:'23505',message:'La cuenta ya existe. Gestiona sus datos desde el listado.'}};
+  const result=await f.invite(inviteForm());
+  assert.match(result.message,/^La cuenta ya existe/);assert.match(result.message,/Restablecer mi contraseña/);assert.equal(f.state.inviteCalls,0);
+});
 test('Supabase rate limiting the invite email is reported distinctly',async()=>{
   const f=userFixture();f.state.invite={error:{status:429}};
   const result=await f.invite(inviteForm());
