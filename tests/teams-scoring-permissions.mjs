@@ -6,13 +6,13 @@ await db.exec(`CREATE ROLE anon;CREATE ROLE authenticated;CREATE SCHEMA auth;
 CREATE TABLE auth.users(id uuid PRIMARY KEY,email text,raw_user_meta_data jsonb);
 CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql STABLE AS $$SELECT nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;
 GRANT USAGE ON SCHEMA public,auth TO authenticated;GRANT USAGE ON SCHEMA public TO anon;`);
-for(const file of ['tests/fixtures/foundation.sql','supabase/migrations/202609160001_profiles_roles.sql','supabase/migrations/202609200002_event_management.sql','supabase/migrations/202609200003_category_management.sql','supabase/migrations/202609210001_teams_scoring.sql','supabase/migrations/202609220002_allow_adding_challenges.sql','supabase/migrations/202609220003_team_number_and_participants.sql','supabase/migrations/202609210002_public_results.sql','supabase/migrations/202609220006_team_number_per_category_public.sql'])await db.exec(await fs.readFile(new URL(file,root),'utf8'));
+for(const file of ['tests/fixtures/foundation.sql','supabase/migrations/202609160001_profiles_roles.sql','supabase/migrations/202609200002_event_management.sql','supabase/migrations/202609200003_category_management.sql','supabase/migrations/202609210001_teams_scoring.sql','supabase/migrations/202609220002_allow_adding_challenges.sql','supabase/migrations/202609220003_team_number_and_participants.sql','supabase/migrations/202609210002_public_results.sql','supabase/migrations/202609220006_team_number_per_category_public.sql','supabase/migrations/202609220008_manual_position_override.sql'])await db.exec(await fs.readFile(new URL(file,root),'utf8'));
 const id=n=>`00000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
 for(let i=1;i<=5;i++){await db.query('INSERT INTO auth.users VALUES($1,$2,$3)',[id(i),`person${i}@example.test`,{}]);await db.query('UPDATE profiles SET role=$1,active=$2 WHERE id=$3',[i===1?'SUPER_ADMIN':i===4?'JUDGE':'ADMIN',i!==5,id(i)]);}
 async function asUser(n,role='authenticated'){await db.exec('RESET ROLE');await db.query("SELECT set_config('request.jwt.claim.sub',$1,false)",[n?id(n):'']);await db.exec('SET ROLE '+role);}
 await db.query("INSERT INTO events(id,name,slug,start_date,end_date,created_by,status,max_teams) VALUES($1,'Evento A','evento-a',now(),now()+interval '1 day',$2,'ACTIVE',3),($3,'Evento B','evento-b',now(),now()+interval '1 day',$4,'ACTIVE',null)",[id(10),id(2),id(11),id(3)]);
 await db.query("INSERT INTO event_categories(id,event_id,name,status,max_teams) VALUES($1,$2,'Categoría A','ACTIVE',2),($3,$2,'Categoría B','ACTIVE',null),($4,$5,'Categoría ajena','ACTIVE',null)",[id(20),id(10),id(21),id(22),id(11)]);
-async function team(n=30,category=20,event=10,version=null,name='Equipo '+n,active=true,number=null,participants=[]){return db.query('SELECT roboscore_save_team($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) AS id',[id(event),id(n),version,id(category),name,'Institución de prueba','Robot',active,number,participants]);}
+async function team(n=30,category=20,event=10,version=null,name='Equipo '+n,active=true,number=null,participants=[],positionOverride=null){return db.query('SELECT roboscore_save_team($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) AS id',[id(event),id(n),version,id(category),name,'Institución de prueba','Robot',active,number,participants,positionOverride]);}
 async function config(category=20,rule='EXCEL_2026',count=4,event=10){return db.query('SELECT roboscore_configure_scoring($1,$2,$3,$4)',[id(event),id(category),rule,count]);}
 async function board(category=20,event=10){return (await db.query('SELECT roboscore_scoring_board($1,$2) AS board',[id(event),id(category)])).rows[0].board;}
 async function version(table,n){return (await db.query(`SELECT updated_at::text AS v FROM ${table} WHERE id=$1`,[n])).rows[0].v;}
@@ -50,6 +50,12 @@ await asUser(2);await team(36,24,12);await config(24,'EXCEL_2026',3,12);let grow
 await config(24,'EXCEL_2026',5,12);growBoard=await board(24,12);assert.equal(growBoard.challenges.length,5);pass('Challenge count can grow after scoring, same rule');
 await assert.rejects(config(24,'EXCEL_2026',2,12),{code:'22023'});pass('Challenge count cannot drop below an already-scored challenge');
 await assert.rejects(config(24,'LEGACY_C',5,12),{code:'22023'});pass('Rule stays fixed even when only increasing challenge count');
+await team(37,24,12);const tieChallenge=growBoard.challenges[0].id;await save(37,tieChallenge,1,50,null,'',12);
+growBoard=await board(24,12);assert.deepEqual(growBoard.teams.map(t=>[t.name,t.position]),[['Equipo 36',1],['Equipo 37',2]]);pass('Different totals rank normally before any manual override');
+const v37=await version('teams',id(37));await team(37,24,12,v37,'Equipo 37',true,null,[],1);
+growBoard=await board(24,12);assert.deepEqual(growBoard.teams.map(t=>[t.name,t.position]),[['Equipo 36',1],['Equipo 37',1]]);pass('A judges-declared tie overrides the computed position without changing either total');
+assert.notEqual(growBoard.teams.find(t=>t.name==='Equipo 36').total,growBoard.teams.find(t=>t.name==='Equipo 37').total);pass('The underlying totals stay different; only the displayed position is shared');
+
 await db.query("UPDATE events SET status='FINISHED' WHERE id=$1",[id(10)]);await assert.rejects(save(30,b.challenges[1].id,1,10),{code:'22023'});await assert.rejects(team(34),{code:'22023'});pass('Finished event prevents score and team edits');
 await db.exec('RESET ROLE');
 const verification=await db.query(await fs.readFile(new URL('supabase/verify-teams-scoring.sql',root),'utf8'));
