@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Resultados · Robo Kids</title>
-<meta name="description" content="Equipos y puntos de la competencia Robo Kids, actualizados en vivo.">
+<meta name="description" content="Clasificación de la competencia Robo Kids, actualizados en vivo.">
 <link rel="icon" href="logo.jpg">
 <style>
 :root{--red:#de0028;--ink:#202831;--muted:#66717e;--line:#e5e7eb}
@@ -41,11 +41,24 @@ select:disabled,input:disabled{background:#f1f2f4;color:#9aa3ad}
 .more{display:block;margin:16px auto 0;padding:10px 22px;border:2px solid #dce1e6;border-radius:99px;background:#fff;font:600 14px/1 inherit;cursor:pointer}
 button:focus-visible,a:focus-visible{outline:3px solid #ac0030;outline-offset:2px}
 footer{padding:18px 0 28px;font-size:11px;color:var(--muted);text-align:center}
+.cat{margin-top:22px}.cat h2{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin:0 0 10px;font-size:18px;letter-spacing:-.3px}.cat h2 small{font-size:12px;font-weight:500;color:var(--muted)}
+.podium{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;list-style:none;margin:0 0 12px;padding:0}
+.medal{position:relative;padding:16px 16px 14px;border-radius:16px;border:2px solid;background:#fff;overflow-wrap:anywhere}
+.medal .badge{display:inline-grid;place-items:center;min-width:44px;height:44px;padding:0 10px;border-radius:99px;font-size:20px;font-weight:800;color:#fff}
+.medal .pname{margin-top:10px;font-size:18px;font-weight:800;line-height:1.2}.medal .psub{margin-top:2px;font-size:12px;color:var(--muted)}
+.medal .ppts{margin-top:10px;font-size:30px;font-weight:800;letter-spacing:-1px;line-height:1}.medal .ppts small{margin-left:6px;font-size:12px;font-weight:600;letter-spacing:0;color:var(--muted)}
+.m1{border-color:#e6b422;background:linear-gradient(160deg,#fffbe8,#fff1bd);box-shadow:0 6px 18px #e6b42238}.m1 .badge{background:#c79100}
+.m2{border-color:#b6bec8;background:linear-gradient(160deg,#fafbfc,#eceff3)}.m2 .badge{background:#7d8794}
+.m3{border-color:#d29a6a;background:linear-gradient(160deg,#fff8f2,#f8e3d1)}.m3 .badge{background:#a9693a}
+.rest{list-style:none;margin:0;padding:0;background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.row{display:grid;grid-template-columns:34px 1fr auto;gap:10px;align-items:center;padding:8px 14px;border-top:1px solid #f0f2f4;font-size:13px}.row:first-child{border-top:0}
+.rpos{font-weight:700;color:var(--muted);text-align:center}.rname{overflow-wrap:anywhere}.rname small{display:block;font-size:11px;color:var(--muted)}.rpts{font-weight:700;color:#4a5460}
+@media(max-width:700px){.podium{grid-template-columns:1fr}.medal{display:grid;grid-template-columns:auto 1fr auto;gap:2px 12px;align-items:center}.medal .badge{grid-row:span 2}.medal .pname{margin:0;font-size:16px}.medal .psub{grid-column:2}.medal .ppts{grid-row:span 2;grid-column:3;margin:0;font-size:24px;text-align:right}.medal .ppts small{display:block;margin:0}}
 @media(max-width:700px){.filters{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
-<header><div class="wrap"><img src="logo.jpg" alt="Robo Kids" width="48" height="48"><h1>Resultados<small>Robo Kids · equipos y puntos</small></h1></div></header>
+<header><div class="wrap"><img src="logo.jpg" alt="Robo Kids" width="48" height="48"><h1>Resultados<small>Robo Kids · clasificación</small></h1></div></header>
 <main class="wrap">
   <div class="filters">
     <label>Evento<select id="ev" disabled><option value="">Cargando…</option></select></label>
@@ -64,12 +77,12 @@ footer{padding:18px 0 28px;font-size:11px;color:var(--muted);text-align:center}
 <script>
 (()=>{
 'use strict';
-const C=window.RESULTADOS_CONFIG||{},STEP=24,CACHE='rk-resultados';
+const C=window.RESULTADOS_CONFIG||{},REST_PREVIEW=8,CACHE='rk-resultados';
 const $=id=>document.getElementById(id);
 const norm=t=>t.normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
 const pts=new Intl.NumberFormat('es-CO',{maximumFractionDigits:3});
 const clock=new Intl.DateTimeFormat('es-CO',{timeStyle:'medium',timeZone:'America/Bogota'});
-const S={data:null,at:null,stale:false,failed:false,ev:'',cat:'',q:'',shown:STEP};
+const S={data:null,at:null,stale:false,failed:false,ev:'',cat:'',q:'',open:new Set()};
 function h(tag,props,...kids){const el=document.createElement(tag);for(const k in props||{}){const v=props[k];if(v==null||v===false)continue;if(k==='class')el.className=v;else if(k.slice(0,2)==='on')el.addEventListener(k.slice(2),v);else el.setAttribute(k,v===true?'':v);}for(const kid of kids.flat(Infinity))if(kid!=null&&kid!==false)el.append(kid);return el;}
 const put=(el,...kids)=>el.replaceChildren(...kids.flat(Infinity).filter(Boolean));
 // "7" or "#7" matches the team number (or a standalone number in its text); anything else matches names.
@@ -99,27 +112,38 @@ function render(){
   put($('spot'),info&&(info.logo_url||info.description)&&h('div',{class:'spot'},/^https?:\/\//i.test(info.logo_url||'')&&h('img',{src:info.logo_url,alt:'Foto de '+info.name,loading:'lazy',referrerpolicy:'no-referrer'}),h('div',{},h('h2',{},info.name),info.description&&h('p',{},info.description))));
   put($('chips'),S.ev&&[h('button',{'aria-pressed':String(!S.cat),onclick:()=>pick('')},'Todo el evento ',h('b',{},inEvent.length)),evCats.map(c=>h('button',{'aria-pressed':String(S.cat===c.id),onclick:()=>pick(c.id)},c.name+' ',h('b',{},count(c.id))))]);
   const order=new Map(cats.map((c,i)=>[c.id,i]));
-  const list=!S.ev?[]:inEvent.filter(t=>(!S.cat||t.category_id===S.cat)&&matches(t,S.q)).sort((a,b)=>a.team_number===b.team_number?(order.get(a.category_id)||0)-(order.get(b.category_id)||0)||a.name.localeCompare(b.name,'es'):a.team_number==null?1:b.team_number==null?-1:a.team_number-b.team_number);
+  const list=!S.ev?[]:inEvent.filter(t=>(!S.cat||t.category_id===S.cat)&&matches(t,S.q));
   const total=S.cat?count(S.cat):inEvent.length;
-  put($('count'),S.ev?`${list.length} de ${total} equipos ${S.cat?'en esta categoría':'en este evento'}`:'Elige un evento para ver sus equipos');
+  put($('count'),S.ev?`${list.length} de ${total} equipos ${S.cat?'en esta categoría':'en este evento'}`:'Elige un evento para ver su clasificación');
   put($('when'),S.at&&`Actualizado ${clock.format(S.at)} (Colombia)`);
-  if(!S.ev){put($('list'),h('p',{class:'empty'},events.length?'Primero, elige un evento: aquí aparecerán sus equipos ordenados por número.':'Todavía no hay eventos publicados.'));return;}
+  if(!S.ev){put($('list'),h('p',{class:'empty'},events.length?'Primero, elige un evento: aquí aparecerá la clasificación de cada categoría.':'Todavía no hay eventos publicados.'));return;}
   if(!list.length){put($('list'),h('p',{class:'empty'},total?'No encontramos coincidencias. Prueba con otro número o nombre.':'Aún no hay equipos publicados en este evento.'));return;}
-  const catName=id=>(cats.find(c=>c.id===id)||{}).name;
-  put($('list'),h('ul',{class:'grid'},list.slice(0,S.shown).map(t=>{
-    const cat=cats.find(c=>c.id===t.category_id),n=cat&&cat.challenge_count;
-    return h('li',{class:'card'},
-      h('div',{class:'pos'+(t.position===1?' first':''),title:'Puesto en su categoría'},t.position==null?'—':t.position,h('small',{},'puesto')),
-      h('div',{class:'name'},t.team_number!=null&&h('span',{class:'num'},'#'+t.team_number+' · '),t.name),
-      h('div',{class:'pts'},t.total===null?'—':pts.format(t.total),h('small',{},t.total===null?'sin puntuación':'puntos')),
-      h('div',{class:'inst'},t.institution+(t.robot_name?' · Robot '+t.robot_name:'')),
-      h('div',{class:'meta'},h('span',{},catName(t.category_id)||''),h('span',{},status(t,n)+(n?` · ${t.scored_count}/${n} retos`:''))));
-  })),list.length>S.shown&&h('button',{class:'more',onclick:()=>{S.shown+=STEP;render();}},`Mostrar más (${list.length-S.shown} restantes)`));
+  const rank=(a,b)=>(a.position==null)-(b.position==null)||(a.position||0)-(b.position||0)||(a.team_number==null)-(b.team_number==null)||(a.team_number||0)-(b.team_number||0)||a.name.localeCompare(b.name,'es');
+  const groups=[...new Set(list.map(t=>t.category_id))].sort((x,y)=>(order.get(x)||0)-(order.get(y)||0));
+  put($('list'),groups.map(id=>{
+    const cat=cats.find(c=>c.id===id)||{},n=cat.challenge_count,rows=list.filter(t=>t.category_id===id).sort(rank);
+    const top=rows.filter(t=>t.position!=null&&t.position<=3&&t.total!==null),rest=rows.filter(t=>!top.includes(t));
+    const open=S.open.has(id),visible=open?rest:rest.slice(0,REST_PREVIEW);
+    const who=t=>[t.team_number!=null&&h('span',{class:'num'},'#'+t.team_number+' · '),t.name];
+    const sub=t=>t.institution+(t.robot_name?' · Robot '+t.robot_name:'');
+    return h('section',{class:'cat'},
+      h('h2',{},cat.name||'Categoría',h('small',{},`${rows.length} equipos`)),
+      top.length>0&&h('ol',{class:'podium'},top.map(t=>h('li',{class:'medal m'+t.position},
+        h('div',{class:'badge'},t.position+'°'),
+        h('div',{class:'pname'},who(t)),
+        h('div',{class:'psub'},sub(t)),
+        h('div',{class:'ppts'},pts.format(t.total),h('small',{},'puntos'))))),
+      visible.length>0&&h('ul',{class:'rest'},visible.map(t=>h('li',{class:'row'},
+        h('span',{class:'rpos'},t.position==null?'—':t.position),
+        h('span',{class:'rname'},who(t),h('small',{},sub(t)+(t.total===null||t.status!=='ACTIVE'?' · '+status(t,n):''))),
+        h('span',{class:'rpts'},t.total===null?'—':pts.format(t.total))))),
+      rest.length>REST_PREVIEW&&h('button',{class:'more',onclick:()=>{open?S.open.delete(id):S.open.add(id);render();}},open?'Ver menos':`Ver los ${rest.length-REST_PREVIEW} equipos restantes`));
+  }));
 }
-function pick(id){S.cat=id;S.shown=STEP;render();}
-$('ev').addEventListener('change',e=>{S.ev=e.target.value;S.cat='';S.shown=STEP;render();});
+function pick(id){S.cat=id;render();}
+$('ev').addEventListener('change',e=>{S.ev=e.target.value;S.cat='';render();});
 $('cat').addEventListener('change',e=>pick(e.target.value));
-$('q').addEventListener('input',e=>{S.q=e.target.value;S.shown=STEP;render();});
+$('q').addEventListener('input',e=>{S.q=e.target.value;render();});
 let busy=false;
 async function load(){
   if(busy)return;busy=true;let changed=true;
