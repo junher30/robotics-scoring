@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Resultados · Robo Kids</title>
+<meta name="description" content="Equipos y puntos de la competencia Robo Kids, actualizados en vivo.">
+<link rel="icon" href="logo.jpg">
+<style>
+:root{--red:#de0028;--ink:#202831;--muted:#66717e;--line:#e5e7eb}
+*{box-sizing:border-box}
+body{margin:0;background:#f8f9fb;color:var(--ink);font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
+.wrap{width:min(980px,calc(100% - 32px));margin-inline:auto}
+header{background:#fff;border-bottom:1px solid var(--line)}
+header .wrap{display:flex;align-items:center;gap:14px;padding-block:14px}
+header img{width:48px;height:48px;border-radius:10px}
+h1{margin:0;font-size:20px;letter-spacing:-.4px}h1 small{display:block;font-size:12px;font-weight:500;color:var(--muted);letter-spacing:0}
+main{padding-block:22px 40px}
+.filters{display:grid;grid-template-columns:1.3fr 1fr 1.1fr;gap:12px}
+label{display:flex;flex-direction:column;gap:5px;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#a73548}
+select,input{width:100%;min-height:48px;padding:10px 14px;border:2px solid #dce1e6;border-radius:12px;background:#fff;color:var(--ink);font:600 16px/1.2 inherit;text-transform:none;letter-spacing:0}
+select:focus,input:focus{outline:none;border-color:var(--red);box-shadow:0 0 0 3px #de002820}
+select:disabled,input:disabled{background:#f1f2f4;color:#9aa3ad}
+.spot{display:flex;gap:14px;align-items:center;margin-top:14px;padding:14px;background:#fff;border:1px solid var(--line);border-radius:12px;overflow-wrap:anywhere}
+.spot img{width:72px;height:72px;border-radius:8px;object-fit:cover;flex-shrink:0}.spot h2{margin:0;font-size:16px}.spot p{margin:4px 0 0;font-size:13px;color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.chips button{display:inline-flex;gap:8px;align-items:center;min-height:40px;padding:6px 14px;border:2px solid #dce1e6;border-radius:99px;background:#fff;font:600 14px/1 inherit;color:var(--ink);cursor:pointer}
+.chips button b{padding:2px 8px;border-radius:99px;background:#f0f2f5;font-size:12px}
+.chips button[aria-pressed=true]{border-color:var(--red);background:#fff0f2;color:#a3132c}.chips button[aria-pressed=true] b{background:var(--red);color:#fff}
+.bar{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:16px 0 10px;font-size:12px;color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:12px;list-style:none;margin:0;padding:0}
+.card{display:grid;grid-template-columns:auto 1fr auto;gap:4px 12px;align-items:center;padding:14px;background:#fff;border:1px solid var(--line);border-radius:12px}
+.pos{grid-row:span 2;min-width:48px;padding:4px 6px;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:12px;background:#f0f2f5;font-weight:800;font-size:18px;line-height:1.1}.pos small{font-size:9px;font-weight:600;color:var(--muted);letter-spacing:.04em;text-transform:uppercase}
+.pos.first{background:#fff4d6;color:#8a5a00}
+.name{font-weight:750;overflow-wrap:anywhere}.num{color:var(--red)}
+.inst{grid-column:2;font-size:12px;color:var(--muted);overflow-wrap:anywhere}
+.pts{grid-row:span 2;grid-column:3;text-align:right;font-size:22px;font-weight:800;letter-spacing:-.5px;line-height:1.1}.pts small{display:block;font-size:10px;font-weight:600;color:var(--muted);letter-spacing:0}
+.meta{grid-column:1/-1;display:flex;justify-content:space-between;gap:8px;margin-top:6px;padding-top:8px;border-top:1px solid #f0f2f4;font-size:11px;color:var(--muted)}
+.empty,.msg{padding:28px 18px;text-align:center;background:#fff;border:1px dashed #cfd6de;border-radius:12px;color:var(--muted)}
+.msg.warn{border-style:solid;border-color:#f0c9a8;background:#fff6ec;color:#7a4a12;padding:10px 14px;margin-bottom:12px;text-align:left;font-size:13px}
+.more{display:block;margin:16px auto 0;padding:10px 22px;border:2px solid #dce1e6;border-radius:99px;background:#fff;font:600 14px/1 inherit;cursor:pointer}
+button:focus-visible,a:focus-visible{outline:3px solid #ac0030;outline-offset:2px}
+footer{padding:18px 0 28px;font-size:11px;color:var(--muted);text-align:center}
+@media(max-width:700px){.filters{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header><div class="wrap"><img src="logo.jpg" alt="Robo Kids" width="48" height="48"><h1>Resultados<small>Robo Kids · equipos y puntos</small></h1></div></header>
+<main class="wrap">
+  <div class="filters">
+    <label>Evento<select id="ev" disabled><option value="">Cargando…</option></select></label>
+    <label>Categoría<select id="cat" disabled><option value="">Todas las categorías</option></select></label>
+    <label>Buscar equipo<input id="q" type="search" placeholder="Número, nombre, institución o robot" disabled maxlength="100" autocomplete="off"></label>
+  </div>
+  <div id="notice" role="status"></div>
+  <div id="spot"></div>
+  <div id="chips" class="chips" role="group" aria-label="Equipos por categoría"></div>
+  <div class="bar"><span id="count" role="status"></span><span id="when"></span></div>
+  <div id="list"></div>
+</main>
+<footer>Se actualiza solo cada pocos segundos mientras esta página está abierta.</footer>
+<noscript><p class="wrap msg">Activa JavaScript para ver los resultados.</p></noscript>
+<script src="config.js"></script>
+<script>
+(()=>{
+'use strict';
+const C=window.RESULTADOS_CONFIG||{},STEP=24,CACHE='rk-resultados';
+const $=id=>document.getElementById(id);
+const norm=t=>t.normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
+const pts=new Intl.NumberFormat('es-CO',{maximumFractionDigits:3});
+const clock=new Intl.DateTimeFormat('es-CO',{timeStyle:'medium',timeZone:'America/Bogota'});
+const S={data:null,at:null,stale:false,failed:false,ev:'',cat:'',q:'',shown:STEP};
+function h(tag,props,...kids){const el=document.createElement(tag);for(const k in props||{}){const v=props[k];if(v==null||v===false)continue;if(k==='class')el.className=v;else if(k.slice(0,2)==='on')el.addEventListener(k.slice(2),v);else el.setAttribute(k,v===true?'':v);}for(const kid of kids.flat(Infinity))if(kid!=null&&kid!==false)el.append(kid);return el;}
+const put=(el,...kids)=>el.replaceChildren(...kids.flat(Infinity).filter(Boolean));
+// "7" or "#7" matches the team number (or a standalone number in its text); anything else matches names.
+function matches(t,raw){const q=norm(raw.trim()).replace(/^#/,'');if(!q)return true;const text=norm(`${t.name} ${t.institution} ${t.robot_name||''}`);if(/^\d+$/.test(q))return t.team_number===Number(q)||new RegExp('(^|\\D)'+q+'(\\D|$)').test(text);return text.includes(q);}
+function status(t,count){return t.status==='REJECTED'?'Retirado':t.status!=='ACTIVE'?'Pendiente':t.total===null?'Sin calificar':count&&t.scored_count>=count?'Completo':'Parcial';}
+function render(){
+  const d=S.data;
+  const notice=[];
+  if(S.failed&&!d)notice.push(h('div',{class:'msg warn'},'No pudimos cargar los resultados. ',h('button',{class:'more',style:'display:inline;margin:0 0 0 8px;padding:4px 12px',onclick:()=>load()},'Reintentar')));
+  else if(S.stale)notice.push(h('div',{class:'msg warn'},'Sin conexión con el servidor: se muestran los últimos datos guardados',S.at?` (${clock.format(S.at)}).`:'.'));
+  put($('notice'),notice);
+  if(!d){put($('list'),!S.failed&&h('p',{class:'msg'},'Cargando resultados…'));return;}
+  const events=d.events,cats=d.categories,teams=d.teams;
+  if(!S.ev&&C.AUTO_SELECT_SINGLE_EVENT&&events.length===1)S.ev=events[0].id;
+  if(S.ev&&!events.some(e=>e.id===S.ev))S.ev='';
+  const evSel=$('ev'),ids=events.map(e=>e.id).join();
+  if(evSel.dataset.ids!==ids){evSel.dataset.ids=ids;put(evSel,h('option',{value:''},events.length?'Selecciona un evento':'No hay eventos publicados'),events.map(e=>h('option',{value:e.id},e.name+(e.status==='FINISHED'?' · Finalizado':'')+` · ${teams.filter(t=>t.event_id===e.id).length} equipos`)));}
+  evSel.value=S.ev;evSel.disabled=!events.length;
+  const evCats=S.ev?cats.filter(c=>c.event_id===S.ev):[];
+  if(S.cat&&!evCats.some(c=>c.id===S.cat))S.cat='';
+  const catSel=$('cat');
+  const catIds=S.ev+':'+evCats.map(c=>c.id).join();
+  if(catSel.dataset.ids!==catIds){catSel.dataset.ids=catIds;put(catSel,h('option',{value:''},'Todas las categorías'),evCats.map(c=>h('option',{value:c.id},c.name)));}
+  catSel.value=S.cat;catSel.disabled=!S.ev;$('q').disabled=!S.ev;
+  const count=id=>teams.filter(t=>t.category_id===id).length,inEvent=teams.filter(t=>t.event_id===S.ev);
+  const info=events.find(e=>e.id===S.ev);
+  put($('spot'),info&&(info.logo_url||info.description)&&h('div',{class:'spot'},/^https?:\/\//i.test(info.logo_url||'')&&h('img',{src:info.logo_url,alt:'Foto de '+info.name,loading:'lazy',referrerpolicy:'no-referrer'}),h('div',{},h('h2',{},info.name),info.description&&h('p',{},info.description))));
+  put($('chips'),S.ev&&[h('button',{'aria-pressed':String(!S.cat),onclick:()=>pick('')},'Todo el evento ',h('b',{},inEvent.length)),evCats.map(c=>h('button',{'aria-pressed':String(S.cat===c.id),onclick:()=>pick(c.id)},c.name+' ',h('b',{},count(c.id))))]);
+  const order=new Map(cats.map((c,i)=>[c.id,i]));
+  const list=!S.ev?[]:inEvent.filter(t=>(!S.cat||t.category_id===S.cat)&&matches(t,S.q)).sort((a,b)=>a.team_number===b.team_number?(order.get(a.category_id)||0)-(order.get(b.category_id)||0)||a.name.localeCompare(b.name,'es'):a.team_number==null?1:b.team_number==null?-1:a.team_number-b.team_number);
+  const total=S.cat?count(S.cat):inEvent.length;
+  put($('count'),S.ev?`${list.length} de ${total} equipos ${S.cat?'en esta categoría':'en este evento'}`:'Elige un evento para ver sus equipos');
+  put($('when'),S.at&&`Actualizado ${clock.format(S.at)} (Colombia)`);
+  if(!S.ev){put($('list'),h('p',{class:'empty'},events.length?'Primero, elige un evento: aquí aparecerán sus equipos ordenados por número.':'Todavía no hay eventos publicados.'));return;}
+  if(!list.length){put($('list'),h('p',{class:'empty'},total?'No encontramos coincidencias. Prueba con otro número o nombre.':'Aún no hay equipos publicados en este evento.'));return;}
+  const catName=id=>(cats.find(c=>c.id===id)||{}).name;
+  put($('list'),h('ul',{class:'grid'},list.slice(0,S.shown).map(t=>{
+    const cat=cats.find(c=>c.id===t.category_id),n=cat&&cat.challenge_count;
+    return h('li',{class:'card'},
+      h('div',{class:'pos'+(t.position===1?' first':''),title:'Puesto en su categoría'},t.position==null?'—':t.position,h('small',{},'puesto')),
+      h('div',{class:'name'},t.team_number!=null&&h('span',{class:'num'},'#'+t.team_number+' · '),t.name),
+      h('div',{class:'pts'},t.total===null?'—':pts.format(t.total),h('small',{},t.total===null?'sin puntuación':'puntos')),
+      h('div',{class:'inst'},t.institution+(t.robot_name?' · Robot '+t.robot_name:'')),
+      h('div',{class:'meta'},h('span',{},catName(t.category_id)||''),h('span',{},status(t,n)+(n?` · ${t.scored_count}/${n} retos`:''))));
+  })),list.length>S.shown&&h('button',{class:'more',onclick:()=>{S.shown+=STEP;render();}},`Mostrar más (${list.length-S.shown} restantes)`));
+}
+function pick(id){S.cat=id;S.shown=STEP;render();}
+$('ev').addEventListener('change',e=>{S.ev=e.target.value;S.cat='';S.shown=STEP;render();});
+$('cat').addEventListener('change',e=>pick(e.target.value));
+$('q').addEventListener('input',e=>{S.q=e.target.value;S.shown=STEP;render();});
+let busy=false;
+async function load(){
+  if(busy)return;busy=true;let changed=true;
+  const ctl=new AbortController(),timer=setTimeout(()=>ctl.abort(),15000);
+  try{
+    const r=await fetch(C.SUPABASE_URL+'/rest/v1/rpc/roboscore_public_results',{method:'POST',headers:{apikey:C.SUPABASE_KEY,'Content-Type':'application/json'},body:'{}',signal:ctl.signal,cache:'no-store'});
+    if(!r.ok)throw new Error(String(r.status));
+    const data=await r.json();
+    if(!data||!Array.isArray(data.teams)||!Array.isArray(data.events)||!Array.isArray(data.categories))throw new Error('formato');
+    changed=!S.data||S.stale||S.failed||JSON.stringify(S.data)!==JSON.stringify(data);
+    S.data=data;S.at=new Date();S.stale=false;S.failed=false;
+    try{localStorage.setItem(CACHE,JSON.stringify({at:S.at.toISOString(),data}));}catch(e){}
+  }catch(e){S.failed=true;S.stale=Boolean(S.data);}
+  finally{clearTimeout(timer);busy=false;if(changed)render();else put($('when'),S.at&&`Actualizado ${clock.format(S.at)} (Colombia)`);}
+}
+try{const c=JSON.parse(localStorage.getItem(CACHE)||'null');if(c&&c.data&&Array.isArray(c.data.teams)){S.data=c.data;S.at=new Date(c.at);S.stale=false;}}catch(e){}
+render();load();
+setInterval(()=>{if(!document.hidden)load();},Math.max(10,C.REFRESH_SECONDS||30)*1000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)load();});
+})();
+</script>
+</body>
+</html>

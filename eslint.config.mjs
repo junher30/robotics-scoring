@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Standalone static results viewer, deployed separately from the Next app.
+    "resultados-lite/**",
   ]),
 ]);
 
