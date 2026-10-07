@@ -95,7 +95,9 @@ function render(){
   else if(S.stale)notice.push(h('div',{class:'msg warn'},'Sin conexión con el servidor: se muestran los últimos datos guardados',S.at?` (${clock.format(S.at)}).`:'.'));
   put($('notice'),notice);
   if(!d){put($('list'),!S.failed&&h('p',{class:'msg'},'Cargando resultados…'));return;}
-  const events=d.events,cats=d.categories,teams=d.teams;
+  const events=d.events,cats=d.categories;
+  const tied=new Set(cats.filter(c=>(C.TIE_FIRST_CATEGORIES||[]).some(n=>norm(n)===norm(c.name))).map(c=>c.id));
+  const teams=d.teams.map(t=>tied.has(t.category_id)&&t.position!=null?{...t,position:t.position<=2?1:t.position-1}:t);
   if(!S.ev&&C.AUTO_SELECT_SINGLE_EVENT&&events.length===1)S.ev=events[0].id;
   if(S.ev&&!events.some(e=>e.id===S.ev))S.ev='';
   const evSel=$('ev'),ids=events.map(e=>e.id).join();

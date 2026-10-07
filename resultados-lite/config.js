@@ -7,4 +7,8 @@ window.RESULTADOS_CONFIG = {
   REFRESH_SECONDS: 30,
   // Si solo hay un evento publicado, se abre directamente sin pedir que lo elijan.
   AUTO_SELECT_SINGLE_EVENT: true,
+  // Decisión de jurados: en estas categorías el 1.º y el 2.º puesto quedan ambos en 1.º y
+  // los demás suben un puesto (3.º → 2.º, 4.º → 3.º…). Solo cambia lo que se muestra aquí;
+  // los puntos no se tocan y se recalcula solo si cambian los puntajes. Vacío [] = sin ajuste.
+  TIE_FIRST_CATEGORIES: ['Categoria C'],
 };
